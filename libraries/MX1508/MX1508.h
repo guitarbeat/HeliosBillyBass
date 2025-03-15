@@ -8,11 +8,8 @@
 #ifndef MX1508_H
 #define MX1508_H
 
-#if (ARDUINO >=100)
+// Modern Arduino versions only need Arduino.h
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 class MX1508 {
   public:
