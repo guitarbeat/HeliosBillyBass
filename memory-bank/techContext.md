@@ -1,24 +1,28 @@
-# Technical Context: BTBillyBass
+# Technical Context: Billy Bass Control System
 
 ## Technology Stack
 
-- **Hardware**: Arduino (Uno/Nano/Pro Mini), MX1508 motor drivers
-- **Programming Language**: C++ (Arduino variant)
-- **Development Environment**: Arduino IDE
-- **Version Control**: Git
-- **Documentation**: Markdown
+- **Hardware**:
+  - Arduino Nano/Uno
+  - 2x MX1508 motor drivers
+  - Big Mouth Billy Bass animatronic
+  - Audio input circuit
+- **Software**:
+  - Arduino C++
+  - MX1508 motor driver library
+  - Custom motor control classes
 
 ## Development Environment
 
 - **Arduino IDE**: Used for code development, compilation, and uploading to the Arduino board
 - **Serial Monitor**: For debugging and command input at 9600 baud rate
-- **Arduino Lint**: For code quality verification
-- **Memory Bank**: Documentation system for project continuity
+- **Debug output enabled**: For detailed output during development
 
 ## Dependencies
 
-- **Arduino Core**: Standard Arduino libraries for basic functionality
 - **MX1508 Library**: Simple driver for the MX1508 motor controller
+- **Arduino Standard Library**: Standard Arduino libraries for basic functionality
+- **AVR Standard Library**: Standard libraries for AVR processors
 
 ## Technical Constraints
 
@@ -27,6 +31,9 @@
 - **PWM Resolution**: Arduino's PWM is limited to 8-bit resolution (0-255)
 - **Analog Input Resolution**: 10-bit resolution (0-1023) for sound input
 - **Serial Communication**: Limited to 9600 baud for reliable communication
+- **Maximum motor speed**: 180 (reduced from 255)
+- **Maximum movement time**: 1000ms
+- **PWM pins required for motor control**: For controlling the motors
 
 ## Hardware Configuration
 
@@ -60,10 +67,36 @@ The codebase is organized into modular components:
 
 ## Build & Deployment
 
-1. **Compilation**: Arduino IDE compiles the code into a binary
-2. **Upload**: Binary is uploaded to the Arduino board via USB
-3. **Verification**: Serial monitor is used to verify correct operation
-4. **Debugging**: Debug messages can be enabled in Config.h
+### Compilation
+
+- **Arduino IDE**: Used for compiling the code
+- **Standard Arduino AVR compilation**: For generating the binary file
+- **Debug mode enabled by default**: For detailed output during development
+
+### Upload Process
+
+1. **Select Arduino Nano/Uno board**: For the specific hardware
+2. **Choose correct COM port**: For connecting the Arduino to the computer
+3. **Upload sketch**: The binary file is transferred to the Arduino board
+4. **Open Serial Monitor at 9600 baud**: For verifying correct operation and debugging
+
+### Initial Setup
+
+1. **Upload code**: The binary file is uploaded to the Arduino board
+2. **Open Serial Monitor**: For sending commands and verifying initial setup
+3. **Send 'h' for help menu**: For accessing available commands and options
+4. **Calibrate movements**:
+   - **Start with low speeds**: For testing and adjusting
+   - **Test each movement**: To ensure functionality
+   - **Adjust timing as needed**: For optimal performance
+   - **Save working values**: For consistent results
+
+### Testing Process
+
+1. **Enable debug output**: For detailed information during testing
+2. **Test each movement individually**: To verify timing and speeds
+3. **Verify timing and speeds**: Ensure correct operation
+4. **Adjust calibration as needed**: For fine-tuning performance
 
 ## File References
 
@@ -77,3 +110,52 @@ The codebase is organized into modular components:
 - `src/CommandSystem.cpp`: Command processing implementation
 - `src/StateMachine.h`: State machine header
 - `src/StateMachine.cpp`: State machine implementation
+
+## Motor Control System
+
+### Direct Control Implementation
+
+```cpp
+// Basic motor control pattern
+void BillyBass::openMouth() {
+    if (!isMouthOpen()) {
+        mouthMotor.setSpeed(calibration.mouthSpeed);
+        mouthMotor.forward();
+        delay(calibration.mouthOpenTime);
+        mouthMotor.halt();
+        _motorState |= MOUTH_OPEN_BIT;
+    }
+}
+```
+
+### Calibration System
+
+- **Movement Timing**:
+  - Mouth open/close: 0-1000ms
+  - Body forward/back: 0-1000ms
+- **Speed Control**:
+  - Mouth: 0-180
+  - Body: 0-180
+- **Default Values**:
+  - Mouth timing: 400ms
+  - Body timing: 600ms
+  - Mouth speed: 150
+  - Body speed: 120
+
+### Serial Commands
+
+``` mermaid
+Basic Movement:
+o - Open mouth
+c - Close mouth
+f - Flap tail
+b - Body forward
+r - Reset position
+
+Configuration:
++ - Speed up
+- - Speed down
+a - Toggle audio mode
+m - Toggle manual mode
+d - Toggle debug mode
+```

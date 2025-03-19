@@ -34,6 +34,12 @@ public:
     void setMovementDuration(uint16_t duration);
     uint16_t getMovementDuration() const;
     
+    // Calibration
+    void setMouthTiming(uint16_t openTime, uint16_t closeTime);
+    void setBodyTiming(uint16_t forwardTime, uint16_t backTime);
+    void setMouthSpeed(uint8_t speed);
+    void setBodySpeed(uint8_t speed);
+    
     // State checks
     bool isMouthOpen() const;
     bool isBodyMoved() const;

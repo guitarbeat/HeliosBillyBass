@@ -24,101 +24,123 @@ void BillyBass::begin() {
 // Basic Movement Commands
 void BillyBass::openMouth() {
     if (!isMouthOpen()) {
-        mouthMotor.setSpeed(MOUTH_SPEED);
+        DEBUG_PRINTLN(F("Opening mouth"));
+        mouthMotor.setSpeed(calibration.mouthSpeed);
         mouthMotor.forward();
-        _motorState |= MOUTH_OPEN_MASK;
-        
-        DEBUG_PRINTLN(F("Mouth opened"));
+        delay(calibration.mouthOpenTime);
+        mouthMotor.halt();
+        _motorState |= MOUTH_OPEN_BIT;
     }
 }
 
 void BillyBass::closeMouth() {
     if (isMouthOpen()) {
-        mouthMotor.setSpeed(MOUTH_SPEED);
+        DEBUG_PRINTLN(F("Closing mouth"));
+        mouthMotor.setSpeed(calibration.mouthSpeed);
         mouthMotor.backward();
-        _motorState &= ~MOUTH_OPEN_MASK;
-        
-        DEBUG_PRINTLN(F("Mouth closed"));
+        delay(calibration.mouthCloseTime);
+        mouthMotor.halt();
+        _motorState &= ~MOUTH_OPEN_BIT;
     }
 }
 
 void BillyBass::flapTail() {
-    if (!isBodyMoved()) {
-        bodyMotor.setSpeed(FLAP_SPEED);
-        bodyMotor.backward();
-        _motorState |= BODY_MOVED_MASK;
-        
-        DEBUG_PRINTLN(F("Tail flapped"));
-    }
+    DEBUG_PRINTLN(F("Flapping tail"));
+    bodyMotor.setSpeed(calibration.bodySpeed);
+    bodyMotor.backward();
+    delay(calibration.bodyBackTime);
+    bodyMotor.halt();
 }
 
 void BillyBass::bodyForward() {
-    if (isBodyMoved()) {
-        bodyMotor.setSpeed(_motorSpeed);
-        bodyMotor.forward();
-        _motorState &= ~BODY_MOVED_MASK;
-        
-        DEBUG_PRINTLN(F("Body moved forward"));
-    }
+    DEBUG_PRINTLN(F("Moving body forward"));
+    bodyMotor.setSpeed(calibration.bodySpeed);
+    bodyMotor.forward();
+    delay(calibration.bodyForwardTime);
+    bodyMotor.halt();
 }
 
 // Helper method for motor movement
 void BillyBass::moveMotor(BillyBassMotor* motor, uint8_t speed, bool forward, uint16_t duration) {
+    if (!motor->isSafeToMove()) return;
+    
     motor->setSpeed(speed);
-    forward ? motor->forward() : motor->backward();
-    delay(duration);
-    motor->stop();
+    if (forward) {
+        motor->forward();
+    } else {
+        motor->backward();
+    }
+    
+    // Safety: Stop after maximum time
+    delay(min(duration, MAX_MOTOR_ON_TIME));
+    motor->smoothStop();
 }
 
-// Complex Movement Sequences
+// Complex Sequences
 void BillyBass::resetMotorsToHome() {
-    // Reset mouth if needed
-    if (isMouthOpen()) {
-        moveMotor(&mouthMotor, _motorSpeed / 2, false, DEFAULT_DURATION);
-        _motorState &= ~MOUTH_OPEN_MASK;
+    // Close mouth if open
+    if (isMouthOpen() && mouthMotor.isSafeToMove()) {
+        closeMouth();
+        delay(DEFAULT_DURATION);
     }
     
-    // Reset body if needed
-    if (isBodyMoved()) {
-        moveMotor(&bodyMotor, _motorSpeed / 2, true, DEFAULT_DURATION);
-        _motorState &= ~BODY_MOVED_MASK;
+    // Return body to home position if moved
+    if (isBodyMoved() && bodyMotor.isSafeToMove()) {
+        bodyMotor.backward();
+        delay(DEFAULT_DURATION);
+        bodyMotor.smoothStop();
+        _motorState &= ~BODY_MOVED_BIT;
     }
     
-    delay(PAUSE_TIME);
+    // Stop all motors
+    mouthMotor.stop();
+    bodyMotor.stop();
     
-    DEBUG_PRINTLN(F("Reset to home position"));
+    DEBUG_PRINTLN(F("Motors reset to home position"));
 }
 
 void BillyBass::singingMotion() {
-    resetMotorsToHome();
+    DEBUG_PRINTLN(F("Singing motion"));
     
-    for (byte i = 0; i < 3; i++) {
+    // Simple singing pattern with safety checks
+    for (int i = 0; i < 3; i++) {
+        if (!mouthMotor.isSafeToMove()) break;
+        
         openMouth();
-        delay(PAUSE_TIME);
+        if (mouthMotor.needsCooldown()) {
+            delay(MOTOR_COOLDOWN_TIME);
+        }
+        
         closeMouth();
-        delay(PAUSE_TIME);
+        if (mouthMotor.needsCooldown()) {
+            delay(MOTOR_COOLDOWN_TIME);
+        }
     }
     
-    flapTail();
-    delay(PAUSE_TIME);
-    bodyForward();
+    if (bodyMotor.isSafeToMove()) {
+        flapTail();
+        if (bodyMotor.needsCooldown()) {
+            delay(MOTOR_COOLDOWN_TIME);
+        }
+        bodyForward();
+    }
     
     DEBUG_PRINTLN(F("Singing motion completed"));
 }
 
 // Audio Reactive Methods
 void BillyBass::articulateBody(bool isTalking) {
-    if (!isTalking) {
-        if (currentTime > bodyActionTime) {
-            bodyMotor.stop();
-            bodyActionTime = currentTime + random(20, 50);
+    if (!isTalking || !bodyMotor.isSafeToMove()) {
+        if (bodyMotor.isMoving()) {
+            bodyMotor.smoothStop();
+            timing.bodyAction = timing.current + random(20, 50);
             DEBUG_PRINTLN(F("Body articulation stopped"));
         }
         return;
     }
     
     // Only change movement if it's time for a new action
-    if (currentTime <= bodyActionTime) return;
+    if (timing.current <= timing.bodyAction) return;
     
     // Movement pattern definitions
     static const uint8_t speeds[] = {0, 150, 200, 255};
@@ -127,95 +149,98 @@ void BillyBass::articulateBody(bool isTalking) {
         {900, 1200},   // Tail flap
         {1500, 3000}   // Full speed
     };
-    static const char* patterns[] = {
-        "Body - no movement",
-        "Body - slow movement",
-        "Body - medium movement",
-        "Body - tail flap",
-        "Body - full movement"
-    };
     
     // Generate random movement pattern (0-7)
     uint8_t pattern = random(8);
-    uint8_t patternType;
-    uint8_t durationIdx = 0;
-    bool isForward = true;
+    uint8_t speedIndex = pattern > 6 ? 3 : pattern > 4 ? 2 : pattern > 2 ? 1 : 0;
+    _bodySpeed = speeds[speedIndex];
     
-    if (pattern == 0) {
-        // No movement
-        patternType = 0;
-        _bodySpeed = speeds[0];
-    } 
-    else if (pattern <= 2) {
-        // Slow movement
-        patternType = 1;
-        _bodySpeed = speeds[1];
+    // Set speed and direction with safety checks
+    if (_bodySpeed > 0 && bodyMotor.isSafeToMove()) {
+        bodyMotor.setSpeed(_bodySpeed);
+        
+        if (pattern <= 6) {
+            bodyMotor.forward();
+            _motorState |= BODY_MOVED_BIT;
+        } else {
+            bodyMotor.backward();
+            _motorState &= ~BODY_MOVED_BIT;
+        }
+        
+        // Set next action time with safety limit
+        uint16_t duration = random(
+            durations[speedIndex > 0 ? speedIndex - 1 : 0][0],
+            min(durations[speedIndex > 0 ? speedIndex - 1 : 0][1], MAX_MOTOR_ON_TIME)
+        );
+        timing.bodyAction = timing.current + duration;
+    } else {
+        bodyMotor.smoothStop();
     }
-    else if (pattern <= 4) {
-        // Medium movement
-        patternType = 2;
-        _bodySpeed = speeds[2];
-    }
-    else if (pattern == 5) {
-        // Tail flap during talking
-        patternType = 3;
-        _bodySpeed = speeds[3];
-        isForward = false;
-        durationIdx = 1;
-    }
-    else {
-        // Full speed movement
-        patternType = 4;
-        _bodySpeed = speeds[3];
-        durationIdx = 2;
-    }
-    
-    // Apply the movement
-    bodyMotor.stop();
-    bodyMotor.setSpeed(_bodySpeed);
-    isForward ? bodyMotor.forward() : bodyMotor.backward();
-    bodyActionTime = currentTime + random(durations[durationIdx][0], durations[durationIdx][1]);
-    
-    DEBUG_PRINTLN(F(patterns[patternType]));
 }
 
+// Random flap when "bored"
 void BillyBass::flap() {
-    bodyMotor.setSpeed(FLAP_SPEED);
-    bodyMotor.backward();
-    delay(500);
-    bodyMotor.stop();
-    
-    DEBUG_PRINTLN(F("Random flap performed"));
+    if (bodyMotor.isSafeToMove()) {
+        DEBUG_PRINTLN(F("Random flap"));
+        flapTail();
+    }
 }
 
 // Settings
-void BillyBass::setMotorSpeed(uint8_t speed) { 
-    _motorSpeed = speed; 
-    
-    DEBUG_PRINT(F("Motor speed set to "));
-    DEBUG_PRINTLN(_motorSpeed);
+void BillyBass::setMotorSpeed(uint8_t speed) {
+    _motorSpeed = constrain(speed, MIN_SPEED, MAX_SPEED);
 }
 
-uint8_t BillyBass::getMotorSpeed() const { 
-    return _motorSpeed; 
+uint8_t BillyBass::getMotorSpeed() const {
+    return _motorSpeed;
 }
 
-void BillyBass::setMovementDuration(uint16_t duration) { 
-    _movementDuration = duration; 
-    
-    DEBUG_PRINT(F("Movement duration set to "));
-    DEBUG_PRINTLN(_movementDuration);
+void BillyBass::setMovementDuration(uint16_t duration) {
+    _movementDuration = min(duration, MAX_MOTOR_ON_TIME);
 }
 
-uint16_t BillyBass::getMovementDuration() const { 
-    return _movementDuration; 
+uint16_t BillyBass::getMovementDuration() const {
+    return _movementDuration;
 }
 
-// State Checks
-bool BillyBass::isMouthOpen() const { 
-    return (_motorState & MOUTH_OPEN_MASK); 
+// State checks
+bool BillyBass::isMouthOpen() const {
+    return (_motorState & MOUTH_OPEN_BIT) != 0;
 }
 
-bool BillyBass::isBodyMoved() const { 
-    return (_motorState & BODY_MOVED_MASK); 
+bool BillyBass::isBodyMoved() const {
+    return (_motorState & BODY_MOVED_BIT) != 0;
+}
+
+// Calibration methods
+void BillyBass::setMouthTiming(uint16_t openTime, uint16_t closeTime) {
+    calibration.mouthOpenTime = min(openTime, MAX_MOVEMENT_TIME);
+    calibration.mouthCloseTime = min(closeTime, MAX_MOVEMENT_TIME);
+    DEBUG_PRINT(F("Mouth timing set to: "));
+    DEBUG_PRINT(calibration.mouthOpenTime);
+    DEBUG_PRINT(F("ms open, "));
+    DEBUG_PRINT(calibration.mouthCloseTime);
+    DEBUG_PRINTLN(F("ms close"));
+}
+
+void BillyBass::setBodyTiming(uint16_t forwardTime, uint16_t backTime) {
+    calibration.bodyForwardTime = min(forwardTime, MAX_MOVEMENT_TIME);
+    calibration.bodyBackTime = min(backTime, MAX_MOVEMENT_TIME);
+    DEBUG_PRINT(F("Body timing set to: "));
+    DEBUG_PRINT(calibration.bodyForwardTime);
+    DEBUG_PRINT(F("ms forward, "));
+    DEBUG_PRINT(calibration.bodyBackTime);
+    DEBUG_PRINTLN(F("ms back"));
+}
+
+void BillyBass::setMouthSpeed(uint8_t speed) {
+    calibration.mouthSpeed = min(speed, MAX_SPEED);
+    DEBUG_PRINT(F("Mouth speed set to: "));
+    DEBUG_PRINTLN(calibration.mouthSpeed);
+}
+
+void BillyBass::setBodySpeed(uint8_t speed) {
+    calibration.bodySpeed = min(speed, MAX_SPEED);
+    DEBUG_PRINT(F("Body speed set to: "));
+    DEBUG_PRINTLN(calibration.bodySpeed);
 } 

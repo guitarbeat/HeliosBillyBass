@@ -57,7 +57,7 @@ This document serves as a comprehensive index that maps all project files to the
 
 ## File Dependency Graph
 
-```
+``` mermaid
 BTBillyBass.ino
 ├── src/core/Config.h
 │   └── src/core/Constants.h

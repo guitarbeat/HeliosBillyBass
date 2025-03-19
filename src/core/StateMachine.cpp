@@ -7,16 +7,14 @@
  * Reads the current sound level and stores it in the global soundVolume variable
  */
 void updateSoundInput() {
-    // Read analog value from sound sensor
-    soundVolume = analogRead(SOUND_PIN);
+    // Read analog input and update sound volume
+    fishState.soundVolume = analogRead(SOUND_PIN);
     
-#if DEBUG
-    // Only print debug info if sound is above threshold to avoid console spam
-    if (soundVolume > SILENCE_THRESHOLD) {
+    // Only print debug if volume is above threshold and debug mode is on
+    if (debugMode && fishState.soundVolume > SILENCE_THRESHOLD) {
         DEBUG_PRINT(F("Sound: "));
-        DEBUG_PRINTLN(soundVolume);
+        DEBUG_PRINTLN(fishState.soundVolume);
     }
-#endif
 }
 
 /**
@@ -24,37 +22,46 @@ void updateSoundInput() {
  * Manages the fish's behavior based on current state, sound input, and timing
  */
 void stateMachineBillyBass() {
-    uint8_t prevState = fishState;
+    static uint8_t lastState = STATE_WAITING;
     
-    switch (fishState) {
+    // Only print state changes
+    if (debugMode && lastState != fishState.state) {
+        DEBUG_PRINT(F("State change: "));
+        DEBUG_PRINTLN(fishState.state);
+        lastState = fishState.state;
+    }
+    
+    uint8_t prevState = fishState.state;
+    
+    switch (fishState.state) {
         case STATE_WAITING: // Waiting for input
             // Check for sound above threshold
-            if (soundVolume > SILENCE_THRESHOLD && currentTime > mouthActionTime) { 
-                talking = true; 
-                mouthActionTime = currentTime + PAUSE_TIME;
-                fishState = STATE_TALKING; // Transition to talking state
+            if (fishState.soundVolume > SILENCE_THRESHOLD && timing.current > timing.mouthAction) { 
+                fishState.talking = true; 
+                timing.mouthAction = timing.current + PAUSE_TIME;
+                fishState.state = STATE_TALKING; // Transition to talking state
             } 
             // Stop motors if beyond scheduled talking time
-            else if (currentTime > mouthActionTime + PAUSE_TIME) { 
+            else if (timing.current > timing.mouthAction + PAUSE_TIME) { 
                 billy.mouthMotor.stop();
                 billy.bodyMotor.stop();
             }
             
             // Check if fish has been idle too long
-            if (currentTime - lastActionTime > IDLE_TIMEOUT) { 
+            if (timing.current - timing.lastAction > IDLE_TIMEOUT) { 
                 // Schedule next random flap
-                lastActionTime = currentTime + random(FLAP_INTERVAL_MIN, FLAP_INTERVAL_MAX); 
-                fishState = STATE_FLAPPING; // Transition to flapping state
+                timing.lastAction = timing.current + random(FLAP_INTERVAL_MIN, FLAP_INTERVAL_MAX); 
+                fishState.state = STATE_FLAPPING; // Transition to flapping state
             }
             break;
 
         case STATE_TALKING: // Talking (mouth moving)
-            if (currentTime < mouthActionTime) { 
+            if (timing.current < timing.mouthAction) { 
                 // If we have a scheduled mouth action in the future
-                if (talking) { 
+                if (fishState.talking) { 
                     // Open mouth and articulate body
                     billy.openMouth(); 
-                    lastActionTime = currentTime;
+                    timing.lastAction = timing.current;
                     billy.articulateBody(true);
                 }
             }
@@ -62,25 +69,25 @@ void stateMachineBillyBass() {
                 // Close mouth and stop articulating
                 billy.closeMouth();
                 billy.articulateBody(false);
-                talking = false;
-                fishState = STATE_WAITING; // Return to waiting state
+                fishState.talking = false;
+                fishState.state = STATE_WAITING; // Return to waiting state
             }
             break;
 
         case STATE_FLAPPING: // Flapping (random movement)
             // Perform a single flap
             billy.flap();
-            fishState = STATE_WAITING; // Return to waiting state
+            fishState.state = STATE_WAITING; // Return to waiting state
             break;
             
         default:
             // Invalid state, reset to waiting
-            fishState = STATE_WAITING;
+            fishState.state = STATE_WAITING;
             break;
     }
     
     // Log state transitions
-    if (prevState != fishState) {
-        debugStateTransition(prevState, fishState);
+    if (prevState != fishState.state) {
+        debugStateTransition(prevState, fishState.state);
     }
 } 

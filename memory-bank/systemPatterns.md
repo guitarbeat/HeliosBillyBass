@@ -1,109 +1,177 @@
 # System Patterns: BTBillyBass
 
-## Architecture Overview
+## Core Architecture
 
-The BTBillyBass project follows a modular architecture with clear separation of concerns. The system is built around a state machine that manages the fish's behavior based on audio input and timing. The architecture consists of several key components organized into logical subfolders that work together to create a responsive and interactive animatronic fish.
+The BTBillyBass project follows a layered architecture with clear separation of concerns:
 
-## Key Components
+1. Hardware Layer: MX1508 motor drivers and physical components
+2. Motor Control Layer: Direct motor control with calibration
+3. Movement Coordination Layer: High-level movement patterns
+4. User Interface Layer: Serial command processing
 
-- **Main Controller (BTBillyBass.ino)**: Central orchestration point that initializes components and manages the main program loop.
-- **Core Components (src/core/)**:
-  - **Configuration (Config.h)**: Centralized configuration parameters including pin definitions and global variable declarations.
-  - **Constants (Constants.h)**: Centralized constant definitions including state definitions, timing values, and motor settings.
-  - **BillyBass Controller (BillyBass.h/cpp)**: High-level control interface for the fish's movements and behaviors.
-  - **State Machine (StateMachine.h/cpp)**: Manages the fish's behavior states (waiting, talking, flapping) based on audio input and timing.
-- **Drivers (src/drivers/)**:
-  - **Motor Control (BillyBassMotor.h/cpp)**: Low-level motor control abstraction for managing the physical motors.
-- **Commands (src/commands/)**:
-  - **Command System (CommandSystem.h/cpp)**: Processes serial commands using function pointers for efficient command mapping.
-- **Utilities (src/utils/)**:
-  - **Debug Utilities (Debug.h)**: Centralized debug functionality for consistent logging.
+## Component Structure
 
-## Design Patterns
+### Core Components
 
-- **State Pattern**: Used in the StateMachine to manage different behavioral states of the fish.
-- **Command Pattern**: Implemented in the CommandSystem for processing serial commands.
-- **Singleton Pattern**: Used for global state management across components.
-- **Factory Method**: Used in motor control initialization.
-- **Observer Pattern**: Implicit in the audio reactivity system where state changes based on audio input.
-- **Early Return Pattern**: Used to reduce nesting and improve code readability.
-- **Conditional Compilation**: Used for debug output to reduce code size in production.
-- **Centralized Logging Pattern**: Consolidated state transition logging to reduce code duplication.
-- **Minimal Interface Pattern**: Removed unused methods to simplify class interfaces.
-- **Standardized Naming Pattern**: Used consistent naming conventions for command functions.
-- **Helper Method Pattern**: Added helper methods to reduce code duplication.
-- **Lookup Table Pattern**: Used arrays for pattern settings to simplify complex methods.
-- **Named Constants Pattern**: Used named constants for bit masks and state values.
-- **Facade Pattern**: The BillyBass class provides a simplified interface to the underlying motor control.
-- **Module Pattern**: Organized related functionality into logical subfolders.
-- **Dependency Injection**: Components receive their dependencies through constructor parameters or global variables.
+- **Main Controller (BTBillyBass.ino)**:
+  - Command processing
+  - Calibration management
+  - State tracking
+  - Audio input handling
 
-## Data Flow
+- **Configuration (src/core/)**:
+  - Config.h: Movement limits, calibration defaults
+  - BillyBass.h/cpp: Movement coordination
+  - StateMachine.h/cpp: Audio reaction behavior
 
-1. **Input Processing**:
-   - Audio input is captured through an analog pin and processed by the StateMachine
-   - Serial commands are received and processed by the CommandSystem
+- **Hardware Interface (src/drivers/)**:
+  - BillyBassMotor.h/cpp: Direct motor control
+  - Basic movement operations
+  - Speed control
 
-2. **State Management**:
-   - The StateMachine determines the appropriate state based on inputs
-   - State transitions trigger different behaviors
+### Movement System
 
-3. **Motor Control**:
-   - High-level commands from BillyBass are translated to motor movements
-   - BillyBassMotor handles the low-level PWM control of the motors
+#### Calibration Framework
 
-4. **Feedback Loop**:
-   - Debug information is sent back through Serial for monitoring
-   - State information is maintained for decision making
+```cpp
+struct MovementCalibration {
+    uint16_t mouthOpenTime;    // Open duration (ms)
+    uint16_t mouthCloseTime;   // Close duration (ms)
+    uint16_t bodyForwardTime;  // Forward motion time (ms)
+    uint16_t bodyBackTime;     // Return motion time (ms)
+    uint8_t mouthSpeed;        // Mouth motor speed (0-180)
+    uint8_t bodySpeed;         // Body motor speed (0-180)
+};
+```
+
+#### Command System
+
+1. Movement Commands:
+   ```
+   o - Open mouth
+   c - Close mouth
+   f - Flap tail
+   b - Body forward
+   r - Reset position
+   ```
+
+2. Calibration Commands:
+   ```
+   t - Set mouth timing
+   y - Set body timing
+   m - Set mouth speed
+   n - Set body speed
+   p - Print settings
+   ```
+
+3. Mode Commands:
+   ```
+   l - Manual/auto toggle
+   a - Audio reactivity
+   d - Debug output
+   h - Help menu
+   ```
+
+### Motor Operations
+
+- **Direct Control**:
+  - Speed setting (0-180)
+  - Forward/backward movement
+  - Immediate halt
+  - Timed movements
+
+- **Movement Types**:
+  - Basic: open/close, forward/back
+  - Complex: singing, flapping
+  - Audio-reactive: dynamic response
+
+### State Management
+
+- **Position Tracking**:
+  ```cpp
+  _motorState |= MOUTH_OPEN_BIT;   // Set mouth open
+  _motorState &= ~MOUTH_OPEN_BIT;  // Set mouth closed
+  ```
+
+- **Mode Management**:
+  ```cpp
+  fishState.manualMode = !fishState.manualMode;
+  fishState.audioReactivityEnabled = !fishState.audioReactivityEnabled;
+  ```
+
+## Implementation Patterns
+
+### Motor Control
+
+1. Direct Movement:
+   ```cpp
+   void BillyBass::openMouth() {
+       if (!isMouthOpen()) {
+           mouthMotor.setSpeed(calibration.mouthSpeed);
+           mouthMotor.forward();
+           delay(calibration.mouthOpenTime);
+           mouthMotor.halt();
+           _motorState |= MOUTH_OPEN_BIT;
+       }
+   }
+   ```
+
+2. State Tracking:
+   ```cpp
+   bool BillyBass::isMouthOpen() const {
+       return (_motorState & MOUTH_OPEN_BIT) != 0;
+   }
+   ```
+
+### Command Processing
+
+```cpp
+void processCommand(char cmd) {
+    switch (cmd) {
+        case 'o': billy.openMouth(); break;
+        case 'c': billy.closeMouth(); break;
+        case 't': // Set timing...
+        case 'm': // Set speed...
+        // etc...
+    }
+}
+```
 
 ## Technical Decisions
 
-- **Modular Code Structure**: Code is split into logical components with clear responsibilities to improve maintainability and readability.
-- **Subfolder Organization**: Source files are organized into logical subfolders (core, drivers, commands, utils) for better navigation and maintainability.
-- **Header File Organization**: Each component has a header file with proper include guards to prevent multiple inclusions.
-- **Function Pointer Command System**: Using function pointers for command mapping instead of if-else chains for better performance and maintainability.
-- **State-Based Behavior**: Using a state machine to manage the fish's behavior provides a clear and maintainable way to handle complex interactions.
-- **Debug Mode**: Comprehensive debugging capability with conditional compilation to reduce code size in production.
-- **Constants Extraction**: Magic numbers replaced with named constants for better code readability and maintenance.
-- **Global State Management**: Using global variables for state that needs to be shared across components, with clear documentation of their purpose.
-- **Simplified Documentation**: Reduced verbosity in header files for better readability while maintaining clarity.
-- **Streamlined Debug Output**: Standardized debug messages with shorter, clearer format.
-- **Consolidated Constants**: Grouped related constants for better organization and maintainability.
-- **Early Returns**: Used early returns in complex methods to reduce nesting and improve readability.
-- **Redundancy Elimination**: Systematically identified and removed redundant code patterns.
-- **Minimal Interfaces**: Removed unused methods to simplify class interfaces and reduce program size.
-- **Centralized State Logging**: Consolidated state transition logging to a single location for better maintainability.
-- **Constants Separation**: Separated constants from configuration for better organization and maintainability.
-- **Helper Methods**: Added helper methods to reduce code duplication and improve maintainability.
-- **Pattern Arrays**: Used arrays for pattern settings to simplify complex methods and improve readability.
-- **Bit Mask Constants**: Used named constants for bit masks to improve code readability and maintainability.
-- **Centralized Debug Utilities**: Created a dedicated Debug.h file for consistent logging across the codebase.
-- **Relative Include Paths**: Used relative include paths to maintain proper dependencies between components.
+### Simplified Control
 
-## File References
+- Removed safety layers
+- Direct motor commands
+- Calibration-based timing
+- User-adjustable settings
 
-- `BTBillyBass.ino`: Main Arduino sketch file
-- `src/core/Config.h`: Configuration header with pin definitions and global variable declarations
-- `src/core/Constants.h`: Constants header with state definitions, timing values, and motor settings
-- `src/core/BillyBass.h`: High-level control header
-- `src/core/BillyBass.cpp`: High-level control implementation
-- `src/core/StateMachine.h`: State machine header
-- `src/core/StateMachine.cpp`: State machine implementation
-- `src/drivers/BillyBassMotor.h`: Motor control header
-- `src/drivers/BillyBassMotor.cpp`: Motor control implementation
-- `src/commands/CommandSystem.h`: Command processing header
-- `src/commands/CommandSystem.cpp`: Command processing implementation
-- `src/utils/Debug.h`: Debug utilities header
+### Movement Calibration
 
-## Movement Patterns
+- Independent timing control
+- Separate speed settings
+- Real-time adjustment
+- Persistent settings
 
-1. Basic Movements:
-   - Open/Close Mouth: Controlled movement with position tracking
-   - Flap Tail/Body Forward: Coordinated movement with state management
+### Command Interface
 
-2. Complex Sequences:
-   - Singing Motion: Coordinated mouth and body movements
-   - Reset Sequence: Safe return to home position
+- Single-character commands
+- Interactive calibration
+- Immediate feedback
+- Mode toggles
 
-3. Speed Control:
-   - Speed Adjustment: 5-unit increments within defined limits
+## Future Extensibility
+
+### Planned Features
+
+- Configuration persistence
+- Additional movement patterns
+- Enhanced audio response
+- Testing framework
+
+### Design Flexibility
+
+- Modular components
+- Clear interfaces
+- Documented patterns
+- Easy calibration
