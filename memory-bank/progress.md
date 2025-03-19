@@ -8,6 +8,8 @@
 - Direct motor control
 - Command conflict resolution
 - Updated help system
+- Comprehensive documentation
+- Calibration instructions
 
 ## In Progress
 
@@ -29,6 +31,7 @@
    - Removed safety checks that were blocking movements
    - Fixed command conflict between 'm' commands
    - Simplified motor control logic
+   - Updated documentation for clarity
 
 2. **Current Status**:
    - New calibration system needs testing
@@ -39,12 +42,10 @@
 
 - Removed safety check system
 - Changed manual mode toggle to 'l'
-- Added calibration commands:
-  - 't' for mouth timing
-  - 'y' for body timing
-  - 'm' for mouth speed
-  - 'n' for body speed
-  - 'p' to print settings
+- Added calibration commands
+- Updated README with calibration instructions
+- Enhanced documentation clarity
+- Added step-by-step setup guide
 
 ## Next Steps
 
@@ -91,10 +92,11 @@ MAX_SPEED: 180
 
 ## Documentation Status
 
-- README: Updated
-- Memory Bank: Current
-- Command reference: Updated
+- README: Updated with calibration guide
+- Memory Bank: Updated with latest changes
+- Command reference: Updated and clarified
 - Debug messages: Implemented
+- Setup guide: Added step-by-step instructions
 
 ## Testing Instructions
 

@@ -37,7 +37,7 @@
 FishState fishState = {
     0,      // state
     true,   // audioReactivityEnabled
-    false,  // manualMode
+    true,   // manualMode - Changed to start in manual mode
     false,  // talking
     0       // soundVolume
 };
@@ -58,10 +58,10 @@ bool debugMode = false;
 void initializeCalibration() {
     calibration.mouthOpenTime = 400;
     calibration.mouthCloseTime = 400;
-    calibration.bodyForwardTime = 600;
-    calibration.bodyBackTime = 600;
-    calibration.mouthSpeed = 150;
-    calibration.bodySpeed = 120;
+    calibration.bodyForwardTime = 800;    // Increased from 600 to 800ms
+    calibration.bodyBackTime = 800;       // Increased from 600 to 800ms
+    calibration.mouthSpeed = 100;
+    calibration.bodySpeed = 100;
 }
 
 // Simple command processing
@@ -72,27 +72,27 @@ void processCommand(char cmd) {
         case 'o':
             // Open mouth
             billy.openMouth();
-            Serial.println(F("Mouth opened"));
+            Serial.println(F("🐟 Opening mouth..."));
             break;
         case 'c':
             // Close mouth
             billy.closeMouth();
-            Serial.println(F("Mouth closed"));
+            Serial.println(F("🐟 Closing mouth..."));
             break;
         case 'f':
             // Flap tail
             billy.flapTail();
-            Serial.println(F("Tail flapped"));
+            Serial.println(F("🐟 Flapping tail... *splash*"));
             break;
         case 'b':
             // Body forward
             billy.bodyForward();
-            Serial.println(F("Body forward"));
+            Serial.println(F("🐟 Moving body forward..."));
             break;
         case 'r':
             // Reset position
             billy.resetMotorsToHome();
-            Serial.println(F("Reset position"));
+            Serial.println(F("🐟 Resetting to home position..."));
             break;
 
         // Calibration commands
@@ -188,20 +188,20 @@ void processCommand(char cmd) {
         case 'a':
             // Toggle audio reactivity
             fishState.audioReactivityEnabled = !fishState.audioReactivityEnabled;
-            Serial.print(F("Audio reactivity: "));
-            Serial.println(fishState.audioReactivityEnabled ? F("ON") : F("OFF"));
+            Serial.print(F("🎤 Audio reactivity: "));
+            Serial.println(fishState.audioReactivityEnabled ? F("ON - Billy will sing along!") : F("OFF - Billy is taking a break"));
             break;
         case 'l':
             // Toggle manual mode
             fishState.manualMode = !fishState.manualMode;
-            Serial.print(F("Manual mode: "));
-            Serial.println(fishState.manualMode ? F("ON") : F("OFF"));
+            Serial.print(F("🎮 Manual control: "));
+            Serial.println(fishState.manualMode ? F("ON - You're in charge!") : F("OFF - Billy's on autopilot"));
             break;
         case 'd':
             // Toggle debug mode
             debugMode = !debugMode;
-            Serial.print(F("Debug mode: "));
-            Serial.println(debugMode ? F("ON") : F("OFF"));
+            Serial.print(F("🔧 Debug mode: "));
+            Serial.println(debugMode ? F("ON - Showing technical details") : F("OFF - Keeping it simple"));
             break;
         case 'h':
         case '?':
@@ -215,38 +215,41 @@ void processCommand(char cmd) {
 }
 
 void printMenu() {
-    Serial.println(F("\n=== BILLY BASS COMMANDS ==="));
-    Serial.println(F("Movement:"));
+    Serial.println(F("\n🐟 === BILLY BASS CONTROL CENTER === 🐟"));
+    Serial.println(F("\n📋 MOVEMENT COMMANDS:"));
     Serial.println(F("o: Open mouth    c: Close mouth"));
     Serial.println(F("f: Flap tail     b: Body forward"));
     Serial.println(F("r: Reset position"));
     
-    Serial.println(F("\nCalibration:"));
+    Serial.println(F("\n⚙️ CALIBRATION:"));
     Serial.println(F("t: Set mouth timing (open,close)"));
     Serial.println(F("y: Set body timing (forward,back)"));
     Serial.println(F("m: Set mouth speed"));
     Serial.println(F("n: Set body speed"));
     Serial.println(F("p: Print current settings"));
     
-    Serial.println(F("\nToggles:"));
-    Serial.println(F("a: Toggle audio  d: Toggle debug"));
-    Serial.println(F("l: Toggle manual/auto mode"));
-    Serial.println(F("h: Help menu"));
+    Serial.println(F("\n🔄 MODE CONTROLS:"));
+    Serial.println(F("a: Audio react   d: Debug info"));
+    Serial.println(F("l: Manual/auto   h: Show menu"));
     
     // Print current settings
     if (debugMode) {
-        Serial.println(F("\n=== Current Settings ==="));
-        Serial.print(F("Mouth timing: "));
+        Serial.println(F("\n📊 CURRENT SETTINGS:"));
+        Serial.print(F("Mouth timing (open,close): "));
         Serial.print(calibration.mouthOpenTime);
-        Serial.print(F(","));
-        Serial.println(calibration.mouthCloseTime);
-        Serial.print(F("Body timing: "));
+        Serial.print(F("ms, "));
+        Serial.print(calibration.mouthCloseTime);
+        Serial.println(F("ms"));
+        
+        Serial.print(F("Body timing (forward,back): "));
         Serial.print(calibration.bodyForwardTime);
-        Serial.print(F(","));
-        Serial.println(calibration.bodyBackTime);
-        Serial.print(F("Speeds: "));
+        Serial.print(F("ms, "));
+        Serial.print(calibration.bodyBackTime);
+        Serial.println(F("ms"));
+        
+        Serial.print(F("Motor speeds (mouth,body): "));
         Serial.print(calibration.mouthSpeed);
-        Serial.print(F(","));
+        Serial.print(F(", "));
         Serial.println(calibration.bodySpeed);
     }
 }
@@ -265,9 +268,10 @@ void setup() {
     initializeCalibration();
     
     // Show welcome message and menu
-    Serial.println(F("\n=== BTBillyBass Initialized ==="));
-    Serial.println(F("Audio-reactive animatronic fish control"));
-    Serial.println(F("Type 'h' for help menu"));
+    Serial.println(F("\n🎣 === WELCOME TO BILLY BASS === 🎣"));
+    Serial.println(F("Your singing fish friend is ready to perform!"));
+    Serial.println(F("Starting in manual mode - You're in control!"));
+    Serial.println(F("Type 'h' for the command menu"));
     printMenu();
 }
 

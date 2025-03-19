@@ -23,46 +23,72 @@ This project transforms a Big Mouth Billy Bass animatronic fish into an interact
 
 - Audio-reactive movement
 - Manual control via serial commands
+- Calibration system for timing and speed
 - State machine for autonomous behavior
-- Configurable settings
 - Debug mode for troubleshooting
 
-## Project Structure
+## Initial Calibration
 
+### Default Settings
+```cpp
+// Movement Timing
+mouthOpenTime = 400ms    // Default mouth open duration
+mouthCloseTime = 400ms   // Default mouth close duration
+bodyForwardTime = 800ms  // Default body forward time
+bodyBackTime = 800ms     // Default body return time
+
+// Speed Settings
+mouthSpeed = 100         // Default mouth motor speed (0-180)
+bodySpeed = 100         // Default body motor speed (0-180)
 ```
-BTBillyBass/
-├── BTBillyBass.ino       # Main Arduino sketch
-├── memory-bank/          # Project documentation
-├── src/                  # Source code
-│   ├── core/             # Core functionality
-│   │   ├── BillyBass.cpp # High-level fish control
-│   │   ├── BillyBass.h   # High-level fish control header
-│   │   ├── Config.h      # Configuration settings
-│   │   ├── Constants.h   # Constant definitions
-│   │   ├── StateMachine.cpp # State machine implementation
-│   │   └── StateMachine.h   # State machine header
-│   ├── commands/         # Command processing
-│   │   ├── CommandSystem.cpp # Command implementation
-│   │   └── CommandSystem.h   # Command system header
-│   ├── drivers/          # Hardware drivers
-│   │   ├── BillyBassMotor.cpp # Motor control implementation
-│   │   └── BillyBassMotor.h   # Motor control header
-│   └── utils/            # Utility functions
-│       └── Debug.h       # Debug utilities
-└── .arduino-lint.yml     # Arduino linting configuration
-```
+
+### Calibration Process
+
+1. **Initial Setup**:
+   - Upload the code with default settings
+   - Open Serial Monitor (9600 baud)
+   - Type 'd' to enable debug mode
+   - Type 'p' to view current settings
+
+2. **Basic Movement Test**:
+   ```
+   o -> c  : Test mouth (open/close, 400ms each)
+   f -> b  : Test body (flap/forward, 800ms each)
+   r      : Reset position
+   ```
+
+3. **Adjust Settings** (if needed):
+   - Mouth Timing: `t` (enter open,close times in ms)
+   - Body Timing: `y` (enter forward,back times in ms)
+   - Mouth Speed: `m` (enter speed 0-180)
+   - Body Speed: `n` (enter speed 0-180)
+
+4. **Fine-Tuning Tips**:
+   - Start with lower speeds (around 100)
+   - Use shorter durations initially (200-300ms)
+   - Increase values gradually until movement is smooth
+   - Test each movement thoroughly before proceeding
 
 ## Commands
 
+### Movement Controls
 - **o**: Open mouth
 - **c**: Close mouth
 - **f**: Flap tail
 - **b**: Body forward
-- **r**: Reset to home position
+- **r**: Reset position
 - **s**: Singing motion
-- **+/-**: Increase/decrease speed
+
+### Calibration Commands
+- **t**: Set mouth timing (open,close)
+- **y**: Set body timing (forward,back)
+- **m**: Set mouth speed
+- **n**: Set body speed
+- **p**: Print current settings
+
+### Mode Controls
 - **a**: Toggle audio reactivity
-- **m**: Toggle manual/auto mode
+- **l**: Toggle manual/auto mode
 - **d**: Toggle debug mode
 - **h**: Show help menu
 
@@ -71,7 +97,8 @@ BTBillyBass/
 1. Connect the hardware according to the pin configuration
 2. Upload the sketch to your Arduino board
 3. Open the Serial Monitor at 9600 baud
-4. Type 'h' to see the available commands
+4. Follow the Initial Calibration process above
+5. Type 'h' to see all available commands
 
 ## Development
 
