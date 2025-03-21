@@ -50,7 +50,7 @@ const int MOUTH_SPEED = 100;   // Increased speed for mouth movements (was 100)
 const int HOLD_DIVISOR = 2;    // Divides speed when holding position to reduce power
 
 // Default timing values based on testing
-const int DEFAULT_MOUTH_OPEN_TIME = 100;     
+const int DEFAULT_MOUTH_OPEN_TIME = 150;     
 const int DEFAULT_BODY_FORWARD_TIME = 700;  // Longer time for body forward for full calibration (was 500ms)
 const int DEFAULT_BODY_BACKWARD_TIME = 1000;  // Longer time for body backward (was 500ms)
 const int DEFAULT_TAIL_ONLY_TIME = 500;      // Increased time for tail movement (was 300ms)
