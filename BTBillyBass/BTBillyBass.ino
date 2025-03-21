@@ -60,6 +60,10 @@ boolean bodyTimedAction = false;
 boolean mouthOpenDirection = true;  // true = open, false = close
 boolean bodyForwardDirection = true; // true = forward, false = backward
 
+// Motor type identifiers for generic functions
+#define BODY_MOTOR 0
+#define MOUTH_MOTOR 1
+
 // ======= MESSAGE STRINGS (STORED IN FLASH) =======
 // Command response messages
 const char MSG_BODY_FWD[] PROGMEM = "Moving body motor forward...";
@@ -148,34 +152,28 @@ void loop() {
 void checkTimedActions() {
   // Handle mouth timed actions
   if (mouthTimedAction && currentTime >= mouthActionEndTime) {
-    mouthTimedAction = false;
-    mouthMotor.setSpeed(MOUTH_SPEED / HOLD_DIVISOR);
-    
-    if (mouthOpenDirection) {
-      mouthMotor.forward();
-      printProgmemString(MSG_MOUTH_DONE);
-      Serial.println("Holding mouth open. Use 'stop' or another command to release.");
-    } else {
-      mouthMotor.backward();
-      printProgmemString(MSG_MOUTH_DONE);
-      Serial.println("Holding mouth closed. Use 'stop' or another command to release.");
-    }
+    transitionToHold(MOUTH_MOTOR, mouthMotor, MOUTH_SPEED, mouthOpenDirection, &mouthTimedAction, MSG_MOUTH_DONE);
   }
   
   // Handle body timed actions
   if (bodyTimedAction && currentTime >= bodyActionEndTime) {
-    bodyTimedAction = false;
-    bodyMotor.setSpeed(BODY_SPEED / HOLD_DIVISOR);
-    
-    if (bodyForwardDirection) {
-      bodyMotor.forward();
-      printProgmemString(MSG_BODY_DONE);
-      Serial.println("Holding body forward position. Use 'stop' or another command to release.");
-    } else {
-      bodyMotor.backward();
-      printProgmemString(MSG_BODY_DONE);
-      Serial.println("Holding body backward position. Use 'stop' or another command to release.");
-    }
+    transitionToHold(BODY_MOTOR, bodyMotor, BODY_SPEED, bodyForwardDirection, &bodyTimedAction, MSG_BODY_DONE);
+  }
+}
+
+// Helper function to transition a motor to hold state after a timed action
+void transitionToHold(uint8_t motorType, MX1508 &motor, int speed, boolean direction, 
+                      boolean *timedAction, const char* doneMsg) {
+  *timedAction = false;
+  motor.setSpeed(speed / HOLD_DIVISOR);
+  direction ? motor.forward() : motor.backward();
+  printProgmemString(doneMsg);
+  if (motorType == BODY_MOTOR) {
+    Serial.println(direction ? "Holding body forward position. Use 'stop' or another command to release." :
+                              "Holding body backward position. Use 'stop' or another command to release.");
+  } else { // MOUTH_MOTOR
+    Serial.println(direction ? "Holding mouth open. Use 'stop' or another command to release." :
+                              "Holding mouth closed. Use 'stop' or another command to release.");
   }
 }
 
@@ -198,6 +196,15 @@ void printProgmemString(const char* str) {
 }
 
 // ======= COMMAND PROCESSING =======
+// Helper function to parse duration from commands
+int parseDuration(const char* cmdPrefix) {
+  int duration = 0;
+  char format[32];
+  snprintf(format, sizeof(format), "%s %%d", cmdPrefix);
+  sscanf(inputBuffer, format, &duration);
+  return duration;
+}
+
 void processCommand() {
   // Convert input to lowercase for case-insensitive commands
   for (int i = 0; inputBuffer[i]; i++) inputBuffer[i] = tolower(inputBuffer[i]);
@@ -208,39 +215,26 @@ void processCommand() {
   
   // Extract command parts
   char command[20] = {0};
-  int position = 0, strength = 0;
-  sscanf(inputBuffer, "%s %d %d", command, &position, &strength);
+  sscanf(inputBuffer, "%s", command);
   
   // Parse and execute commands
   if (strStartsWith(command, "body")) {
     if (strEqual(inputBuffer, "body forward")) bodyForward();
-    else if (strStartsWith(inputBuffer, "body forward ")) {
-      int duration;
-      sscanf(inputBuffer, "body forward %d", &duration);
-      bodyForwardTimed(duration);
-    }
+    else if (strStartsWith(inputBuffer, "body forward "))
+      bodyForwardTimed(parseDuration("body forward"));
     else if (strEqual(inputBuffer, "body backward")) bodyBackward();
-    else if (strStartsWith(inputBuffer, "body backward ")) {
-      int duration;
-      sscanf(inputBuffer, "body backward %d", &duration);
-      bodyBackwardTimed(duration);
-    }
+    else if (strStartsWith(inputBuffer, "body backward "))
+      bodyBackwardTimed(parseDuration("body backward"));
     else if (strEqual(inputBuffer, "body release")) bodyRelease();
     else if (strEqual(inputBuffer, "body hold")) bodyHold();
   }
   else if (strStartsWith(command, "mouth")) {
     if (strEqual(inputBuffer, "mouth open")) openMouth();
-    else if (strStartsWith(inputBuffer, "mouth open ")) {
-      int duration;
-      sscanf(inputBuffer, "mouth open %d", &duration);
-      openMouthTimed(duration);
-    }
+    else if (strStartsWith(inputBuffer, "mouth open "))
+      openMouthTimed(parseDuration("mouth open"));
     else if (strEqual(inputBuffer, "mouth close")) closeMouth();
-    else if (strStartsWith(inputBuffer, "mouth close ")) {
-      int duration;
-      sscanf(inputBuffer, "mouth close %d", &duration);
-      closeMouthTimed(duration);
-    }
+    else if (strStartsWith(inputBuffer, "mouth close "))
+      closeMouthTimed(parseDuration("mouth close"));
     else if (strEqual(inputBuffer, "mouth release")) mouthRelease();
     else if (strEqual(inputBuffer, "mouth hold")) mouthHold();
   }
@@ -249,119 +243,95 @@ void processCommand() {
   else Serial.println(FPSTR(MSG_UNKNOWN));
 }
 
-// ======= BODY MOTOR CONTROL FUNCTIONS =======
-void bodyForward() {
-  printProgmemString(MSG_BODY_FWD);
-  bodyTimedAction = false;
-  bodyMotor.setSpeed(BODY_SPEED);
-  bodyMotor.forward();
-  bodyForwardDirection = true;
-}
-
-void bodyBackward() {
-  printProgmemString(MSG_BODY_REV);
-  bodyTimedAction = false;
-  bodyMotor.setSpeed(BODY_SPEED);
-  bodyMotor.backward();
-  bodyForwardDirection = false;
-}
-
-void bodyRelease() {
-  printProgmemString(MSG_BODY_REL);
-  bodyTimedAction = false;
-  bodyMotor.setSpeed(0);
-  bodyMotor.release();
-}
-
-void bodyHold() {
-  printProgmemString(MSG_BODY_HOLD);
-  bodyTimedAction = false;
-  bodyMotor.setSpeed(BODY_SPEED / HOLD_DIVISOR);
-  if (bodyForwardDirection) bodyMotor.forward();
-  else bodyMotor.backward();
-  Serial.println("Holding body position. Use 'stop' or another command to release.");
-}
-
-void bodyForwardTimed(int duration) {
-  Serial.print(FPSTR(MSG_FWD_TIME));
-  Serial.print(duration);
-  Serial.println(FPSTR(MSG_MS));
-  bodyMotor.setSpeed(BODY_SPEED);
-  bodyMotor.forward();
-  bodyForwardDirection = true;
-  bodyTimedAction = true;
-  bodyActionEndTime = currentTime + duration;
-}
-
-void bodyBackwardTimed(int duration) {
-  Serial.print(FPSTR(MSG_REV_TIME));
-  Serial.print(duration);
-  Serial.println(FPSTR(MSG_MS));
-  bodyMotor.setSpeed(BODY_SPEED);
-  bodyMotor.backward();
-  bodyForwardDirection = false;
-  bodyTimedAction = true;
-  bodyActionEndTime = currentTime + duration;
-}
-
-// ======= MOUTH MOTOR CONTROL FUNCTIONS =======
-void openMouth() {
-  printProgmemString(MSG_MOUTH_OPN);
-  mouthTimedAction = false;
-  mouthMotor.setSpeed(MOUTH_SPEED);
-  mouthMotor.forward();
-  mouthOpenDirection = true;
-}
-
-void closeMouth() {
-  printProgmemString(MSG_MOUTH_CLS);
-  mouthTimedAction = false;
-  mouthMotor.setSpeed(MOUTH_SPEED);
-  mouthMotor.backward();
-  mouthOpenDirection = false;
-}
-
-void mouthRelease() {
-  printProgmemString(MSG_MOUTH_REL);
-  mouthTimedAction = false;
-  mouthMotor.setSpeed(0);
-  mouthMotor.release();
-}
-
-void mouthHold() {
-  printProgmemString(MSG_MOUTH_HOLD);
-  mouthTimedAction = false;
-  mouthMotor.setSpeed(MOUTH_SPEED / HOLD_DIVISOR);
-  if (mouthOpenDirection) {
-    mouthMotor.forward();
-    Serial.println("Holding mouth open. Use 'stop' or another command to release.");
-  } else {
-    mouthMotor.backward();
-    Serial.println("Holding mouth closed. Use 'stop' or another command to release.");
+// ======= GENERIC MOTOR CONTROL FUNCTIONS =======
+// Helper to access motor variables based on type
+void getMotorParams(uint8_t motorType, MX1508 **motor, int *speed, boolean **timedAction, 
+                   boolean **direction, unsigned long *actionEndTime) {
+  if (motorType == BODY_MOTOR) {
+    *motor = &bodyMotor;
+    *speed = BODY_SPEED;
+    *timedAction = &bodyTimedAction;
+    *direction = &bodyForwardDirection;
+    *actionEndTime = bodyActionEndTime;
+  } else { // MOUTH_MOTOR
+    *motor = &mouthMotor;
+    *speed = MOUTH_SPEED;
+    *timedAction = &mouthTimedAction;
+    *direction = &mouthOpenDirection;
+    *actionEndTime = mouthActionEndTime;
   }
 }
 
-void openMouthTimed(int duration) {
-  Serial.print(FPSTR(MSG_OPEN_TIME));
-  Serial.print(duration);
-  Serial.println(FPSTR(MSG_MS));
-  mouthMotor.setSpeed(MOUTH_SPEED);
-  mouthMotor.forward();
-  mouthOpenDirection = true;
-  mouthTimedAction = true;
-  mouthActionEndTime = currentTime + duration;
+// Generic function to control motors for both body and mouth
+void setMotorDirection(uint8_t motorType, boolean isForward, const char* message) {
+  printProgmemString(message);
+  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
+  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
+  
+  *timedAction = false;
+  motor->setSpeed(speed);
+  isForward ? motor->forward() : motor->backward();
+  *direction = isForward;
 }
 
-void closeMouthTimed(int duration) {
-  Serial.print(FPSTR(MSG_CLOSE_TIME));
+// Generic function to release motors
+void releaseMotor(uint8_t motorType, const char* message) {
+  printProgmemString(message);
+  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
+  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
+  
+  *timedAction = false;
+  motor->setSpeed(0);
+  motor->release();
+}
+
+// Generic function to hold motor position
+void holdMotor(uint8_t motorType, const char* message, const char* holdMsg) {
+  printProgmemString(message);
+  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
+  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
+  
+  *timedAction = false;
+  motor->setSpeed(speed / HOLD_DIVISOR);
+  *direction ? motor->forward() : motor->backward();
+  Serial.println(holdMsg);
+}
+
+// Generic function for timed motor actions
+void timedMotorAction(uint8_t motorType, boolean isForward, int duration, const char* message) {
+  Serial.print(FPSTR(message));
   Serial.print(duration);
   Serial.println(FPSTR(MSG_MS));
-  mouthMotor.setSpeed(MOUTH_SPEED);
-  mouthMotor.backward();
-  mouthOpenDirection = false;
-  mouthTimedAction = true;
-  mouthActionEndTime = currentTime + duration;
+  
+  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
+  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
+  
+  motor->setSpeed(speed);
+  isForward ? motor->forward() : motor->backward();
+  *direction = isForward;
+  *timedAction = true;
+  if (motorType == BODY_MOTOR)
+    bodyActionEndTime = currentTime + duration;
+  else
+    mouthActionEndTime = currentTime + duration;
 }
+
+// ======= MOTOR CONTROL WRAPPER FUNCTIONS =======
+// Body control wrappers
+void bodyForward() { setMotorDirection(BODY_MOTOR, true, MSG_BODY_FWD); }
+void bodyBackward() { setMotorDirection(BODY_MOTOR, false, MSG_BODY_REV); }
+void bodyRelease() { releaseMotor(BODY_MOTOR, MSG_BODY_REL); }
+void bodyHold() { holdMotor(BODY_MOTOR, MSG_BODY_HOLD, "Holding body position. Use 'stop' or another command to release."); }
+void bodyForwardTimed(int duration) { timedMotorAction(BODY_MOTOR, true, duration, MSG_FWD_TIME); }
+void bodyBackwardTimed(int duration) { timedMotorAction(BODY_MOTOR, false, duration, MSG_REV_TIME); }
+
+// Mouth control wrappers
+void openMouth() { setMotorDirection(MOUTH_MOTOR, true, MSG_MOUTH_OPN); }
+void closeMouth() { setMotorDirection(MOUTH_MOTOR, false, MSG_MOUTH_CLS); }
+void mouthRelease() { releaseMotor(MOUTH_MOTOR, MSG_MOUTH_REL); }
+void mouthHold() { holdMotor(MOUTH_MOTOR, MSG_MOUTH_HOLD, "Holding mouth position. Use 'stop' or another command to release."); }
+void openMouthTimed(int duration) { timedMotorAction(MOUTH_MOTOR, true, duration, MSG_OPEN_TIME); }
+void closeMouthTimed(int duration) { timedMotorAction(MOUTH_MOTOR, false, duration, MSG_CLOSE_TIME); }
 
 // ======= GLOBAL CONTROL FUNCTIONS =======
 void stopAll() {
@@ -372,25 +342,21 @@ void stopAll() {
 }
 
 // ======= HELP DISPLAY FUNCTION =======
+// Help text array containing all messages
+const char* const HELP_SECTIONS[] PROGMEM = {
+  HELP_TITLE, HELP_BASIC, 
+  HELP_BF, HELP_BB, HELP_BR, HELP_BH,
+  HELP_MO, HELP_MC, HELP_MR, HELP_MH,
+  HELP_STOP, HELP_HELP, 
+  HELP_TIMED, HELP_BF_T, HELP_BB_T, HELP_MO_T, HELP_MC_T,
+  HELP_AUTO, HELP_END
+};
+
 void printHelp() {
-  printProgmemString(HELP_TITLE);
-  printProgmemString(HELP_BASIC);
-  printProgmemString(HELP_BF);
-  printProgmemString(HELP_BB);
-  printProgmemString(HELP_BR);
-  printProgmemString(HELP_BH);
-  printProgmemString(HELP_MO);
-  printProgmemString(HELP_MC);
-  printProgmemString(HELP_MR);
-  printProgmemString(HELP_MH);
-  printProgmemString(HELP_STOP);
-  printProgmemString(HELP_HELP);
-  Serial.println("");
-  printProgmemString(HELP_TIMED);
-  printProgmemString(HELP_BF_T);
-  printProgmemString(HELP_BB_T);
-  printProgmemString(HELP_MO_T);
-  printProgmemString(HELP_MC_T);
-  printProgmemString(HELP_AUTO);
-  printProgmemString(HELP_END);
+  for (uint8_t i = 0; i < sizeof(HELP_SECTIONS)/sizeof(HELP_SECTIONS[0]); i++) {
+    // Print the help section from PROGMEM
+    printProgmemString((const char*)pgm_read_word(&HELP_SECTIONS[i]));
+    // Add blank line between basic and timed commands
+    if (i == 11) Serial.println("");
+  }
 }
