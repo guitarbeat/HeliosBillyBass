@@ -51,17 +51,17 @@ const int HOLD_DIVISOR = 2;    // Divides speed when holding position to reduce 
 
 // Default timing values based on testing
 const int DEFAULT_MOUTH_OPEN_TIME = 150;     
-const int DEFAULT_BODY_FORWARD_TIME = 1000;  // Longer time for body forward for full calibration (was 500ms)
-const int DEFAULT_BODY_BACKWARD_TIME = 1000;  // Longer time for body backward (was 500ms)
+const int DEFAULT_BODY_FORWARD_TIME = 900;  // Longer time for body forward for full calibration (was 500ms)
+const int DEFAULT_BODY_BACKWARD_TIME = 900;  // Longer time for body backward (was 500ms)
 const int DEFAULT_TAIL_ONLY_TIME = 500;      // Increased time for tail movement (was 300ms)
-const int HOLD_TIMEOUT = 1000;               // Time to hold before auto-releasing (1 second)
+const int HOLD_TIMEOUT = 900;               // Time to hold before auto-releasing (1 second)
 
 // Yap mode configuration
-const int MOUTH_DEBOUNCE_TIME = 100;      // Minimum time between mouth movements (ms)
+const int MOUTH_DEBOUNCE_TIME = 400;      // Minimum time between mouth movements (ms)
 const int HEAD_MOVEMENT_INTERVAL = 6000; // Reduced time between random head movements (was 5000ms)
-const int LOUD_SOUND_INTERVAL = 500;     // Time window to count consecutive loud sounds (ms)
-const int CONSECUTIVE_SOUNDS_THRESHOLD = 3; // Number of consecutive sounds to trigger head movement
-const int HEAD_RETURN_DELAY = 500;       // Time to wait before returning head to forward position
+const int LOUD_SOUND_INTERVAL = 1000;     // Time window to count consecutive loud sounds (ms)
+const int CONSECUTIVE_SOUNDS_THRESHOLD = 4; // Number of consecutive sounds to trigger head movement
+const int HEAD_RETURN_DELAY = 700;       // Time to wait before returning head to forward position
 
 // ======= STATE MANAGEMENT =======
 // Serial command processing
