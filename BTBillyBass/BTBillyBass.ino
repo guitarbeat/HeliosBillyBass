@@ -1,5 +1,5 @@
 /*
- * BTBillyBass - Serial Monitor Control System
+ * BTBillyBass - Serial Monitor Control System - V2
  * 
  * Control a Big Mouth Billy Bass animatronic using serial commands with precise timing.
  * Features include:
@@ -45,13 +45,13 @@ const float AUDIO_DROP_FACTOR = 0.7;     // Factor to detect audio level drops (
 const float LOUD_SOUND_FACTOR = 1.5;     // Factor to detect loud sounds (150% of threshold)
 
 // Motor speed settings
-const int BODY_SPEED = 150;    // Maximum speed for body movements (was 200)
-const int MOUTH_SPEED = 100;   // Increased speed for mouth movements (was 100)
+const int BODY_SPEED = 255;    // Maximum speed for body movements (was 200)
+const int MOUTH_SPEED = 255;   // Increased speed for mouth movements (was 100)
 const int HOLD_DIVISOR = 2;    // Divides speed when holding position to reduce power
 
 // Default timing values based on testing
 const int DEFAULT_MOUTH_OPEN_TIME = 150;     
-const int DEFAULT_BODY_FORWARD_TIME = 700;  // Longer time for body forward for full calibration (was 500ms)
+const int DEFAULT_BODY_FORWARD_TIME = 1000;  // Longer time for body forward for full calibration (was 500ms)
 const int DEFAULT_BODY_BACKWARD_TIME = 1000;  // Longer time for body backward (was 500ms)
 const int DEFAULT_TAIL_ONLY_TIME = 500;      // Increased time for tail movement (was 300ms)
 const int HOLD_TIMEOUT = 1000;               // Time to hold before auto-releasing (1 second)
