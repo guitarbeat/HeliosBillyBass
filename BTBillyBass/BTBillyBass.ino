@@ -45,8 +45,8 @@ const float AUDIO_DROP_FACTOR = 0.7;     // Factor to detect audio level drops (
 const float LOUD_SOUND_FACTOR = 1.5;     // Factor to detect loud sounds (150% of threshold)
 
 // Motor speed settings
-const int BODY_SPEED = 255;    // Maximum speed for body movements (was 200)
-const int MOUTH_SPEED = 255;   // Increased speed for mouth movements (was 100)
+const int BODY_SPEED = 150;    // Maximum speed for body movements (was 200)
+const int MOUTH_SPEED = 250;   // Increased speed for mouth movements (was 100)
 const int HOLD_DIVISOR = 2;    // Divides speed when holding position to reduce power
 
 // Default timing values based on testing
@@ -57,11 +57,11 @@ const int DEFAULT_TAIL_ONLY_TIME = 500;      // Increased time for tail movement
 const int HOLD_TIMEOUT = 900;               // Time to hold before auto-releasing (1 second)
 
 // Yap mode configuration
-const int MOUTH_DEBOUNCE_TIME = 400;      // Minimum time between mouth movements (ms)
-const int HEAD_MOVEMENT_INTERVAL = 6000; // Reduced time between random head movements (was 5000ms)
+const int MOUTH_DEBOUNCE_TIME = 200;      // Minimum time between mouth movements (ms)
+const int HEAD_MOVEMENT_INTERVAL = 10000; // Reduced time between random head movements (was 5000ms)
 const int LOUD_SOUND_INTERVAL = 1000;     // Time window to count consecutive loud sounds (ms)
 const int CONSECUTIVE_SOUNDS_THRESHOLD = 4; // Number of consecutive sounds to trigger head movement
-const int HEAD_RETURN_DELAY = 700;       // Time to wait before returning head to forward position
+const int HEAD_RETURN_DELAY = 1000;       // Time to wait before returning head to forward position
 
 // ======= STATE MANAGEMENT =======
 // Serial command processing
@@ -122,6 +122,13 @@ void setup() {
   
   // Display help information on startup
   printHelp();
+  
+  // Start in yap mode automatically
+  // Wait a moment for everything to initialize properly
+  delay(1000);
+  
+  // Start yap mode with the default silence threshold
+  startYapMode(silenceThreshold);
 }
 
 // ======= MAIN PROGRAM LOOP =======
