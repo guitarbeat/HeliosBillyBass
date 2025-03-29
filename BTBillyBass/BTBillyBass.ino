@@ -1,627 +1,497 @@
 /*
- * BTBillyBass - Serial Monitor Control System - V2
+ * BTBillyBass - Condensed Control System - V3
  * 
- * Control a Big Mouth Billy Bass animatronic using serial commands with precise timing.
- * Features include:
- *  - Direct motor control for body and mouth movements
- *  - Timed actions with automatic position holding
- *  - Memory-efficient implementation using PROGMEM strings
- *  - Command parsing with flexible duration parameters
+ * Control a Big Mouth Billy Bass animatronic using serial commands or audio response.
  * 
  * Hardware Requirements:
- *  - Arduino board with at least 4 PWM pins
+ *  - Arduino board with 4 PWM pins
  *  - MX1508 H-bridge motor drivers
- *  - Big Mouth Billy Bass (or compatible animatronic)
+ *  - Big Mouth Billy Bass animatronic
  *  - 5V power supply for motors
  * 
  * Pin Configuration:
  *  - Body motor: Pins 6, 9 (controls head/tail movement)
  *  - Mouth motor: Pins 5, 3 (controls mouth opening/closing)
  * 
- * For detailed command list, enter 'help' in the Serial Monitor.
+ * For command list, enter 'help' in the Serial Monitor.
  * 
- * Original code by Jordan Bunker <jordan@hierotechnics.com> 2019
- * Modified for manual control with timed actions and position holding.
- * License: MIT License (https://opensource.org/licenses/MIT)
+ * Based on code by Jordan Bunker <jordan@hierotechnics.com>
+ * License: MIT License
  */
 
 #include <MX1508.h>
-#include <avr/pgmspace.h> // For PROGMEM string storage
+#include <avr/pgmspace.h>
 
-// Define FPSTR if it doesn't exist (compatibility for older Arduino versions)
-#ifndef FPSTR
-#define FPSTR(pstr_pointer) (reinterpret_cast<const __FlashStringHelper *>(pstr_pointer))
-#endif
+// Motor configuration
+MX1508 bodyMotor(6, 9);  // Head/tail movement
+MX1508 mouthMotor(5, 3); // Mouth movement
 
-// ======= HARDWARE CONFIGURATION =======
-// Motor control pins and setup
-MX1508 bodyMotor(6, 9);  // Controls head/tail movement on PWM pins 6 and 9
-MX1508 mouthMotor(5, 3);  // Controls mouth movement on PWM pins 5 and 3
+// Pin definitions
+#define SOUND_PIN A0
 
-// Audio input configuration
-const int SOUND_PIN = A0;                // Sound input on analog pin A0
-int silenceThreshold = 12;               // Default threshold for "silence" - anything below this is ignored
-const float AUDIO_DROP_FACTOR = 0.7;     // Factor to detect audio level drops (70% of previous level)
-const float LOUD_SOUND_FACTOR = 1.5;     // Factor to detect loud sounds (150% of threshold)
-
-// Motor speed settings
-const int BODY_SPEED = 150;    // Maximum speed for body movements (was 200)
-const int MOUTH_SPEED = 250;   // Increased speed for mouth movements (was 100)
-const int HOLD_DIVISOR = 2;    // Divides speed when holding position to reduce power
-
-// Default timing values based on testing
-const int DEFAULT_MOUTH_OPEN_TIME = 150;     
-const int DEFAULT_BODY_FORWARD_TIME = 900;  // Longer time for body forward for full calibration (was 500ms)
-const int DEFAULT_BODY_BACKWARD_TIME = 900;  // Longer time for body backward (was 500ms)
-const int DEFAULT_TAIL_ONLY_TIME = 500;      // Increased time for tail movement (was 300ms)
-const int HOLD_TIMEOUT = 900;               // Time to hold before auto-releasing (1 second)
-
-// Yap mode configuration
-const int MOUTH_DEBOUNCE_TIME = 200;      // Minimum time between mouth movements (ms)
-const int HEAD_MOVEMENT_INTERVAL = 10000; // Reduced time between random head movements (was 5000ms)
-const int LOUD_SOUND_INTERVAL = 1000;     // Time window to count consecutive loud sounds (ms)
-const int CONSECUTIVE_SOUNDS_THRESHOLD = 4; // Number of consecutive sounds to trigger head movement
-const int HEAD_RETURN_DELAY = 1000;       // Time to wait before returning head to forward position
-
-// ======= STATE MANAGEMENT =======
-// Serial command processing
-char inputBuffer[32];          // Buffer for incoming commands (32 byte limit)
-int inputIndex = 0;            // Index for current position in buffer
-boolean stringComplete = false; // Flag for complete command received
-boolean yapMode = false;       // Flag to track if in yap mode
-
-// Timing variables
-unsigned long currentTime = 0;
-unsigned long mouthActionEndTime = 0;
-unsigned long bodyActionEndTime = 0;
-boolean mouthTimedAction = false;
-boolean bodyTimedAction = false;
-
-// Hold state tracking
-unsigned long mouthHoldStartTime = 0;
-unsigned long bodyHoldStartTime = 0;
-boolean mouthHolding = false;
-boolean bodyHolding = false;
-
-// Motor direction tracking
-boolean mouthOpenDirection = true;  // true = open, false = close
-boolean bodyForwardDirection = true; // true = forward, false = backward
-
-// Motor type identifiers for generic functions
+// Motor constants
 #define BODY_MOTOR 0
 #define MOUTH_MOTOR 1
+#define BODY_SPEED 200
+#define MOUTH_SPEED 250
+#define HOLD_DIVISOR 2
 
-// ======= MESSAGE STRINGS (STORED IN FLASH) =======
-// Command response messages - all unused messages removed
+// Timing constants (milliseconds)
+#define MOUTH_OPEN_TIME 120
+#define BODY_FORWARD_TIME 800
+#define BODY_BACKWARD_TIME 1000
+#define TAIL_ONLY_TIME 400
+#define HOLD_TIMEOUT 500
+#define MOUTH_DEBOUNCE_TIME 110
+#define SILENCE_TIMEOUT 3000
+#define AUDIO_QUIET_THRESHOLD 1000
 
-// Help text - concise version only
-const char HELP_TITLE[] PROGMEM = "\n== Billy Bass Controls ==";
-const char HELP_BODY_CMDS[] PROGMEM = "Body: forward, backward, release, hold";
-const char HELP_MOUTH_CMDS[] PROGMEM = "Mouth: open, close, release, hold";
-const char HELP_TIME_INFO[] PROGMEM = "Add time (ms) to commands: 'body forward 1000'";
-const char HELP_YAP_CMD[] PROGMEM = "Yap: activates audio-responsive mode ('stop' to exit)";
-const char HELP_STOP_CMD[] PROGMEM = "Stop: halts all motors";
-const char HELP_END[] PROGMEM = "========================";
+// Audio constants
+#define AUDIO_DROP_FACTOR 0.7
+#define LOUD_SOUND_FACTOR 1.5
 
-// ======= SYSTEM INITIALIZATION =======
+// State variables
+char cmdBuf[32];                  // Command buffer
+int cmdIndex = 0;                 // Command buffer index
+boolean cmdComplete = false;      // Command complete flag
+boolean yapMode = false;          // Audio response mode
+int silenceThreshold = 12;        // Audio threshold
+
+// Motor state tracking
+unsigned long curTime = 0;
+unsigned long mouthEndTime = 0, bodyEndTime = 0;
+unsigned long mouthHoldTime = 0, bodyHoldTime = 0;
+boolean mouthAction = false, bodyAction = false;
+boolean mouthHolding = false, bodyHolding = false;
+boolean mouthOpen = true, bodyForward = true;
+
+// Help text (stored in flash memory)
+const char HELP[] PROGMEM = 
+  "\n== Billy Controls ==\n"
+  "Body: forward, backward, release, hold\n"
+  "Mouth: open, close, release, hold\n"
+  "Add time (ms): 'body forward 1000'\n"
+  "Yap: audio mode ('stop' to exit)\n"
+  "Stop: halt all motors\n"
+  "===================";
+
+// ======= INITIALIZATION =======
 void setup() {
-  // Initialize motors in safe state
-  bodyMotor.setSpeed(0);
-  mouthMotor.setSpeed(0);
+  // Safety first - motors off
   bodyMotor.halt();
   mouthMotor.halt();
   
-  // Initialize random seed for head movements
-  randomSeed(analogRead(A1)); // Use unconnected analog pin for randomness
-  
-  // Setup serial communication
+  // Setup
+  randomSeed(analogRead(A1));
   Serial.begin(9600);
-  
-  // Configure audio input pin
   pinMode(SOUND_PIN, INPUT);
   
-  // Display help information on startup
-  printHelp();
-  
-  // Start in yap mode automatically
-  // Wait a moment for everything to initialize properly
+  // Print help and start in yap mode
+  printPgm(HELP);
   delay(1000);
-  
-  // Start yap mode with the default silence threshold
   startYapMode(silenceThreshold);
 }
 
-// ======= MAIN PROGRAM LOOP =======
+// ======= MAIN LOOP =======
 void loop() {
-  currentTime = millis();
+  curTime = millis();
   
-  // Check for yap mode
+  // Process modes
   if (yapMode) {
     processYap();
   } else {
-    checkTimedActions();
-    checkHoldTimeouts(); // Check if we need to release holds
-  }
-  
-  // Process completed commands
-  if (stringComplete) {
-    processCommand();
-    inputIndex = 0;
-    inputBuffer[0] = '\0';
-    stringComplete = false;
-  }
-  
-  // Read incoming serial data
-  while (Serial.available() && inputIndex < 31) {
-    char inChar = (char)Serial.read();
-    inputBuffer[inputIndex++] = inChar;
-    inputBuffer[inputIndex] = '\0';
+    // Check for timed actions ending
+    if (mouthAction && curTime >= mouthEndTime) 
+      finishAction(MOUTH_MOTOR);
+    if (bodyAction && curTime >= bodyEndTime) 
+      finishAction(BODY_MOTOR);
     
-    if (inChar == '\n' || inChar == '\r') {
-      inputBuffer[--inputIndex] = '\0';
-      stringComplete = true;
+    // Check hold timeouts
+    if (mouthHolding && (curTime - mouthHoldTime >= HOLD_TIMEOUT)) {
+      motorControl(MOUTH_MOTOR, 0, false);
+      mouthHolding = false;
+    }
+    if (bodyHolding && (curTime - bodyHoldTime >= HOLD_TIMEOUT)) {
+      motorControl(BODY_MOTOR, 0, false);
+      bodyHolding = false;
     }
   }
-}
-
-// ======= MOTOR TIMING MANAGEMENT =======
-// Checks if timed motor actions have completed and transitions to hold state
-void checkTimedActions() {
-  // Handle mouth timed actions
-  if (mouthTimedAction && currentTime >= mouthActionEndTime) {
-    transitionToHold(MOUTH_MOTOR, mouthMotor, MOUTH_SPEED, mouthOpenDirection, &mouthTimedAction);
+  
+  // Process serial commands
+  if (cmdComplete) {
+    runCommand();
+    cmdIndex = 0;
+    cmdBuf[0] = '\0';
+    cmdComplete = false;
   }
   
-  // Handle body timed actions
-  if (bodyTimedAction && currentTime >= bodyActionEndTime) {
-    transitionToHold(BODY_MOTOR, bodyMotor, BODY_SPEED, bodyForwardDirection, &bodyTimedAction);
+  // Read serial input
+  while (Serial.available() && cmdIndex < 31) {
+    char c = (char)Serial.read();
+    cmdBuf[cmdIndex++] = c;
+    cmdBuf[cmdIndex] = '\0';
+    
+    if (c == '\n' || c == '\r') {
+      cmdBuf[--cmdIndex] = '\0';
+      cmdComplete = true;
+    }
   }
-}
-
-// Check if we need to release any holds that have timed out
-void checkHoldTimeouts() {
-  if (mouthHolding && (currentTime - mouthHoldStartTime >= HOLD_TIMEOUT)) {
-    releaseMotor(MOUTH_MOTOR);
-    mouthHolding = false;
-    Serial.println("Mouth hold: timeout");
-  }
-  if (bodyHolding && (currentTime - bodyHoldStartTime >= HOLD_TIMEOUT)) {
-    releaseMotor(BODY_MOTOR);
-    bodyHolding = false;
-    Serial.println("Body hold: timeout");
-  }
-}
-
-// Helper function to transition a motor to hold state after a timed action
-void transitionToHold(uint8_t motorType, MX1508 &motor, int speed, boolean direction, 
-                      boolean *timedAction) {
-  *timedAction = false;
-  
-  // For body motor (both forward and backward directions), just release instead of holding
-  if (motorType == BODY_MOTOR) {
-    motor.setSpeed(0);
-    motor.release();
-    bodyHolding = false;
-    // Minimal output - just a single line
-    Serial.println(direction ? "Body forward: complete" : "Body backward: complete");
-  } else {
-    // For mouth motor, continue with hold behavior
-    motor.setSpeed(speed / HOLD_DIVISOR);
-    direction ? motor.forward() : motor.backward();
-    mouthHolding = true;
-    mouthHoldStartTime = currentTime;
-    // Minimal output for mouth actions too
-    Serial.println(direction ? "Mouth open: complete (holding)" : "Mouth closed: complete");
-  }
-}
-
-// ======= STRING UTILITY FUNCTIONS =======
-// Checks if two strings are equal
-bool strEqual(const char* str1, const char* str2) {
-  return strcmp(str1, str2) == 0;
-}
-
-// Checks if a string starts with a given prefix
-bool strStartsWith(const char* str, const char* prefix) {
-  return strncmp(str, prefix, strlen(prefix)) == 0;
-}
-
-// Prints a string stored in program memory
-void printProgmemString(const char* str) {
-  char c;
-  while ((c = pgm_read_byte(str++))) Serial.print(c);
-  Serial.println();
 }
 
 // ======= COMMAND PROCESSING =======
-// Helper function to parse duration from commands
-int parseDuration(const char* cmdPrefix) {
-  int duration = 0;
-  char format[32];
-  snprintf(format, sizeof(format), "%s %%d", cmdPrefix);
-  sscanf(inputBuffer, format, &duration);
-  return duration;
-}
-
-void processCommand() {
-  // Convert input to lowercase for case-insensitive commands
-  for (int i = 0; inputBuffer[i]; i++) inputBuffer[i] = tolower(inputBuffer[i]);
+void runCommand() {
+  // Convert to lowercase
+  for (int i = 0; cmdBuf[i]; i++) 
+    cmdBuf[i] = tolower(cmdBuf[i]);
   
-  // Extract command parts - no need to echo received command
-  char command[20] = {0};
-  sscanf(inputBuffer, "%s", command);
+  // Extract first command word
+  char cmd[16] = {0};
+  sscanf(cmdBuf, "%s", cmd);
   
-  // Parse and execute commands
-  if (strStartsWith(command, "body")) {
-    if (strEqual(inputBuffer, "body forward")) {
-      // Move body forward for default time, then release (position held by gears)
-      timedMotorAction(BODY_MOTOR, true, DEFAULT_BODY_FORWARD_TIME);
+  // BODY COMMANDS
+  if (strEq(cmd, "body")) {
+    if (strEq(cmdBuf, "body forward"))
+      timedAction(BODY_MOTOR, true, BODY_FORWARD_TIME);
+    else if (strStart(cmdBuf, "body forward "))
+      timedAction(BODY_MOTOR, true, parseInt("body forward"));
+    else if (strEq(cmdBuf, "body backward"))
+      timedAction(BODY_MOTOR, false, BODY_BACKWARD_TIME);
+    else if (strStart(cmdBuf, "body backward ")) {
+      int t = parseInt("body backward");
+      timedAction(BODY_MOTOR, false, t);
+      if (t <= TAIL_ONLY_TIME) Serial.println("Tail-only");
     }
-    else if (strStartsWith(inputBuffer, "body forward ")) {
-      // Custom timed forward movement
-      timedMotorAction(BODY_MOTOR, true, parseDuration("body forward"));
-    }
-    else if (strEqual(inputBuffer, "body backward")) {
-      // Move body backward for default time
-      timedMotorAction(BODY_MOTOR, false, DEFAULT_BODY_BACKWARD_TIME);
-    }
-    else if (strStartsWith(inputBuffer, "body backward ")) {
-      int duration = parseDuration("body backward");
-      timedMotorAction(BODY_MOTOR, false, duration);
-      
-      // Just indicate if it's a tail-only movement without extra explanation
-      if (duration <= DEFAULT_TAIL_ONLY_TIME) {
-        Serial.println("Tail-only");
-      }
-    }
-    else if (strEqual(inputBuffer, "body release")) {
-      // Release body motor (useful after tail-only movements)
-      releaseMotor(BODY_MOTOR);
-    }
-    else if (strEqual(inputBuffer, "body hold")) {
-      // Hold body in current position
-      holdMotor(BODY_MOTOR, "Body: holding");
-    }
+    else if (strEq(cmdBuf, "body release"))
+      motorControl(BODY_MOTOR, 0, false);
+    else if (strEq(cmdBuf, "body hold"))
+      holdMotor(BODY_MOTOR);
   }
-  else if (strStartsWith(command, "mouth")) {
-    if (strEqual(inputBuffer, "mouth open")) {
-      // Open mouth for default time, then hold
-      timedMotorAction(MOUTH_MOTOR, true, DEFAULT_MOUTH_OPEN_TIME);
-    }
-    else if (strStartsWith(inputBuffer, "mouth open ")) {
-      // Custom timed mouth opening
-      timedMotorAction(MOUTH_MOTOR, true, parseDuration("mouth open"));
-    }
-    else if (strEqual(inputBuffer, "mouth close") || strStartsWith(inputBuffer, "mouth close ")) {
-      // For mouth close, just release as it has a spring-loaded design
-      releaseMotor(MOUTH_MOTOR);
-    }
-    else if (strEqual(inputBuffer, "mouth release")) {
-      // Release mouth motor (allows spring to close it)
-      releaseMotor(MOUTH_MOTOR);
-    }
-    else if (strEqual(inputBuffer, "mouth hold")) {
-      // Hold mouth in current position
-      holdMotor(MOUTH_MOTOR, "Mouth: holding");
-    }
+  // MOUTH COMMANDS
+  else if (strEq(cmd, "mouth")) {
+    if (strEq(cmdBuf, "mouth open"))
+      timedAction(MOUTH_MOTOR, true, MOUTH_OPEN_TIME);
+    else if (strStart(cmdBuf, "mouth open "))
+      timedAction(MOUTH_MOTOR, true, parseInt("mouth open"));
+    else if (strEq(cmdBuf, "mouth close") || strStart(cmdBuf, "mouth close "))
+      motorControl(MOUTH_MOTOR, 0, false);
+    else if (strEq(cmdBuf, "mouth release"))
+      motorControl(MOUTH_MOTOR, 0, false);
+    else if (strEq(cmdBuf, "mouth hold"))
+      holdMotor(MOUTH_MOTOR);
   }
-  else if (strEqual(inputBuffer, "stop")) {
-    // Stop all motors and exit yap mode
+  // OTHER COMMANDS
+  else if (strEq(cmdBuf, "stop")) {
     Serial.println("Stopped");
-    mouthTimedAction = bodyTimedAction = false;
-    yapMode = false;
+    mouthAction = bodyAction = yapMode = false;
     bodyMotor.halt();
     mouthMotor.halt();
   }
-  else if (strEqual(inputBuffer, "yap")) {
-    // Start yap mode with default threshold
+  else if (strEq(cmdBuf, "yap"))
     startYapMode(silenceThreshold);
-  }
-  else if (strStartsWith(inputBuffer, "yap ")) {
-    // Start yap mode with custom threshold
-    int threshold = parseDuration("yap");
-    startYapMode(threshold);
-  }
-  else if (strEqual(inputBuffer, "help")) {
-    printHelp();
-  }
-  else {
+  else if (strStart(cmdBuf, "yap "))
+    startYapMode(parseInt("yap"));
+  else if (strEq(cmdBuf, "help"))
+    printPgm(HELP);
+  else
     Serial.println("Unknown command. Type 'help'.");
-  }
 }
 
-// ======= GENERIC MOTOR CONTROL FUNCTIONS =======
-// Helper to access motor variables based on type
-void getMotorParams(uint8_t motorType, MX1508 **motor, int *speed, boolean **timedAction, 
-                   boolean **direction, unsigned long *actionEndTime) {
-  if (motorType == BODY_MOTOR) {
-    *motor = &bodyMotor;
-    *speed = BODY_SPEED;
-    *timedAction = &bodyTimedAction;
-    *direction = &bodyForwardDirection;
-    *actionEndTime = bodyActionEndTime;
-  } else { // MOUTH_MOTOR
-    *motor = &mouthMotor;
-    *speed = MOUTH_SPEED;
-    *timedAction = &mouthTimedAction;
-    *direction = &mouthOpenDirection;
-    *actionEndTime = mouthActionEndTime;
-  }
-}
-
-// Generic function to control motors for both body and mouth
-void setMotorDirection(uint8_t motorType, boolean isForward) {
-  // Use short direct message instead of PROGMEM string
-  Serial.println(motorType == BODY_MOTOR ? 
-    (isForward ? "Body: forward" : "Body: backward") : 
-    (isForward ? "Mouth: opening" : "Mouth: closing"));
-    
-  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
-  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
+// ======= MOTOR CONTROL =======
+// Unified motor control function
+void motorControl(uint8_t motor, int speed, boolean isForward) {
+  MX1508 &m = (motor == BODY_MOTOR) ? bodyMotor : mouthMotor;
   
-  *timedAction = false;
-  motor->setSpeed(speed);
-  isForward ? motor->forward() : motor->backward();
-  *direction = isForward;
-}
-
-// Generic function to release motors
-void releaseMotor(uint8_t motorType) {
-  // Use short direct message instead of PROGMEM string
-  Serial.println(motorType == BODY_MOTOR ? "Body: released" : "Mouth: released");
-  
-  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
-  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
-  
-  *timedAction = false;
-  motor->setSpeed(0);
-  motor->release();
-  
-  // Clear hold state
-  if (motorType == BODY_MOTOR) {
-    bodyHolding = false;
+  // Output message
+  if (speed > 0) {
+    Serial.print(motor == BODY_MOTOR ? "Body " : "Mouth ");
+    Serial.println(motor == BODY_MOTOR ? 
+      (isForward ? "forward" : "backward") :
+      (isForward ? "open" : "close"));
   } else {
-    mouthHolding = false;
+    Serial.println(motor == BODY_MOTOR ? "Body released" : "Mouth released");
   }
-}
-
-// Generic function to hold motor position
-void holdMotor(uint8_t motorType, const char* holdMsg) {
-  // Use the simplified holdMsg directly
-  Serial.println(holdMsg);
   
-  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
-  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
-  
-  *timedAction = false;
-  motor->setSpeed(speed / HOLD_DIVISOR);
-  *direction ? motor->forward() : motor->backward();
-  
-  // Set hold state
-  if (motorType == BODY_MOTOR) {
-    bodyHolding = true;
-    bodyHoldStartTime = currentTime;
+  // Control motor
+  m.setSpeed(speed);
+  if (speed == 0) {
+    m.release();
+    if (motor == BODY_MOTOR) bodyHolding = false;
+    else mouthHolding = false;
   } else {
-    mouthHolding = true;
-    mouthHoldStartTime = currentTime;
+    isForward ? m.forward() : m.backward();
+    if (motor == BODY_MOTOR) bodyForward = isForward;
+    else mouthOpen = isForward;
   }
 }
 
-// Generic function for timed motor actions
-void timedMotorAction(uint8_t motorType, boolean isForward, int duration) {
-  // Simplified output for timed actions
-  Serial.print(motorType == BODY_MOTOR ? 
-    (isForward ? "Body forward: " : "Body backward: ") : 
+// Start a timed motor action
+void timedAction(uint8_t motor, boolean isForward, int duration) {
+  int speed = (motor == BODY_MOTOR) ? BODY_SPEED : MOUTH_SPEED;
+  
+  // Output message
+  Serial.print(motor == BODY_MOTOR ? 
+    (isForward ? "Body forward: " : "Body backward: ") :
     (isForward ? "Mouth open: " : "Mouth close: "));
   Serial.print(duration);
   Serial.println("ms");
   
-  MX1508 *motor; int speed; boolean *timedAction, *direction; unsigned long endTime;
-  getMotorParams(motorType, &motor, &speed, &timedAction, &direction, &endTime);
+  // Control motor
+  motorControl(motor, speed, isForward);
   
-  motor->setSpeed(speed);
-  isForward ? motor->forward() : motor->backward();
-  *direction = isForward;
-  *timedAction = true;
-  if (motorType == BODY_MOTOR)
-    bodyActionEndTime = currentTime + duration;
-  else
-    mouthActionEndTime = currentTime + duration;
+  // Set timing
+  if (motor == BODY_MOTOR) {
+    bodyAction = true;
+    bodyEndTime = curTime + duration;
+  } else {
+    mouthAction = true;
+    mouthEndTime = curTime + duration;
+  }
+}
+
+// Finish a timed action
+void finishAction(uint8_t motor) {
+  if (motor == BODY_MOTOR) {
+    bodyAction = false;
+    motorControl(BODY_MOTOR, 0, false);
+    Serial.println(bodyForward ? "Body forward: complete" : "Body backward: complete");
+  } else {
+    mouthAction = false;
+    int holdSpeed = MOUTH_SPEED / HOLD_DIVISOR;
+    motorControl(MOUTH_MOTOR, holdSpeed, mouthOpen);
+    mouthHolding = true;
+    mouthHoldTime = curTime;
+    Serial.println(mouthOpen ? "Mouth open: holding" : "Mouth closed");
+  }
+}
+
+// Hold motor position
+void holdMotor(uint8_t motor) {
+  int speed = (motor == BODY_MOTOR ? BODY_SPEED : MOUTH_SPEED) / HOLD_DIVISOR;
+  boolean dir = (motor == BODY_MOTOR) ? bodyForward : mouthOpen;
+  
+  Serial.println(motor == BODY_MOTOR ? "Body: holding" : "Mouth: holding");
+  
+  motorControl(motor, speed, dir);
+  
+  if (motor == BODY_MOTOR) {
+    bodyHolding = true;
+    bodyHoldTime = curTime;
+  } else {
+    mouthHolding = true;
+    mouthHoldTime = curTime;
+  }
 }
 
 // ======= YAP MODE FUNCTIONS =======
-// Start yap mode with specified threshold
 void startYapMode(int threshold) {
   silenceThreshold = threshold;
-  
-  Serial.print("Yap mode activated with threshold: ");
+  Serial.print("Yap mode: threshold ");
   Serial.println(silenceThreshold);
   
-  // First calibrate the audio level
+  // Calibrate audio
   calibrateAudio();
   
-  // Single upward movement to indicate calibration is complete
-  timedMotorAction(BODY_MOTOR, true, DEFAULT_BODY_FORWARD_TIME / 2);
-  delay(600); // Wait for movement to complete
+  // Signal calibration complete
+  timedAction(BODY_MOTOR, true, BODY_FORWARD_TIME / 2);
+  delay(600);
   
   yapMode = true;
-} 
+}
 
-
-// Auto-calibrate audio levels by sampling ambient noise
 void calibrateAudio() {
-  Serial.println("Calibrating audio levels (3s)...");
+  Serial.println("Calibrating audio (3s)...");
   
-  // Take multiple samples to find the ambient noise level
-  long sumLevels = 0;
-  int sampleCount = 100;
-  int maxLevel = 0;
+  long sum = 0;
+  int max = 0;
   
-  for (int i = 0; i < sampleCount; i++) {
+  // Sample audio for calibration
+  for (int i = 0; i < 100; i++) {
     int level = analogRead(SOUND_PIN);
-    sumLevels += level;
-    if (level > maxLevel) maxLevel = level;
-    delay(30); // Sample over 3 seconds
+    sum += level;
+    if (level > max) max = level;
+    delay(30);
   }
   
-  int avgLevel = sumLevels / sampleCount;
+  int avg = sum / 100;
+  silenceThreshold = avg + 12;
   
-  // Set threshold to be slightly higher than the ambient level
-  silenceThreshold = avgLevel + 10;
-  
-  Serial.print("Ambient level: ");
-  Serial.print(avgLevel);
+  Serial.print("Ambient: ");
+  Serial.print(avg);
   Serial.print(" | Max: ");
-  Serial.print(maxLevel);
+  Serial.print(max);
   Serial.print(" | Threshold: ");
   Serial.println(silenceThreshold);
 }
 
-// Process audio input for yap mode
 void processYap() {
-  // Read audio level
   int audioLevel = analogRead(SOUND_PIN);
   
-  // Check for serial input (to allow stop command)
-  if (Serial.available()) {
-    return; // Let the main loop handle the command
-  }
+  // Check for serial commands
+  if (Serial.available()) return;
   
-  // Process mouth movements based on audio
-  processMouthMovements(audioLevel);
-  
-  // Process head movements based on audio patterns
-  processHeadMovements(audioLevel);
+  // Process audio-driven movements
+  processMouth(audioLevel);
+  processHead(audioLevel);
 }
 
-// Handle mouth movements in response to audio
-void processMouthMovements(int audioLevel) {
-  static boolean mouthIsOpen = false;
-  static unsigned long lastMouthAction = 0;
-  static int lastAudioLevel = 0;
+void processMouth(int audioLevel) {
+  static boolean isOpen = false;
+  static unsigned long lastAction = 0;
+  static int lastLevel = 0;
   
-  // Avoid too frequent mouth actions with a small delay
-  if (currentTime - lastMouthAction > MOUTH_DEBOUNCE_TIME) {
-    // Open mouth when audio rises above threshold
-    if (audioLevel > silenceThreshold && !mouthIsOpen) {
+  // Debounce mouth movements
+  if (curTime - lastAction > MOUTH_DEBOUNCE_TIME) {
+    // Open mouth on sound
+    if (audioLevel > silenceThreshold && !isOpen) {
       mouthMotor.setSpeed(MOUTH_SPEED);
       mouthMotor.forward();
-      mouthIsOpen = true;
-      lastMouthAction = currentTime;
+      isOpen = true;
+      lastAction = curTime;
       
-      // Minimal debugging output
+      // Minimal output
       Serial.print("A:");
       Serial.println(audioLevel);
     }
-    // Close mouth when audio drops
-    else if ((audioLevel < silenceThreshold || audioLevel < lastAudioLevel * AUDIO_DROP_FACTOR) && mouthIsOpen) {
+    // Close mouth when sound drops
+    else if ((audioLevel < silenceThreshold || audioLevel < lastLevel * AUDIO_DROP_FACTOR) && isOpen) {
       mouthMotor.setSpeed(0);
-      mouthMotor.release(); // Use spring to close mouth
-      mouthIsOpen = false;
-      lastMouthAction = currentTime;
+      mouthMotor.release();
+      isOpen = false;
+      lastAction = curTime;
     }
     
-    lastAudioLevel = audioLevel;
+    lastLevel = audioLevel;
   }
 }
 
-// Handle dynamic head movements
-void processHeadMovements(int audioLevel) {
-  // Static variables to maintain state between function calls
-  static unsigned long lastHeadMovement = 0;
-  static unsigned long headMovementEndTime = 0;
-  static unsigned long returnToForwardTime = 0;
-  static boolean headMoving = false;
-  static boolean returningToForward = false;
-  static boolean headDirection = true; // true = forward/up, false = backward/down
-  static int consecutiveLoudSounds = 0;
-  static unsigned long lastLoudSound = 0;
+void processHead(int audioLevel) {
+  // All static variables to maintain state
+  static unsigned long moveEndTime = 0;
+  static boolean moving = false;
+  static int position = 0;  // 0=down, 1=partial, 2=full
+  static unsigned long audioStart = 0, lastAudio = 0, silenceStart = 0;
+  static boolean quiet = true;
+  static int avgLevel = 0;
+  static int peak = 0;
+  static int energy = 0;
   
-  // Detect sustained loud audio for head movement triggering
-  if (audioLevel > silenceThreshold * LOUD_SOUND_FACTOR) {
-    if (currentTime - lastLoudSound < LOUD_SOUND_INTERVAL) {
-      consecutiveLoudSounds++;
-    } else {
-      consecutiveLoudSounds = 1;
-    }
-    lastLoudSound = currentTime;
+  // Update audio stats with smoothing
+  avgLevel = (avgLevel * 0.8) + (audioLevel * 0.2);
+  
+  // Track peak with decay
+  if (audioLevel > peak) {
+    peak = audioLevel;
+  } else if (peak > 0) {
+    peak *= 0.99;
   }
   
-  // Non-blocking head movement state machine
-  if (headMoving) {
-    // If movement is complete, stop and release
-    if (currentTime >= headMovementEndTime) {
-      bodyMotor.setSpeed(0);
-      bodyMotor.release();
-      headMoving = false;
+  // Audio energy tracking
+  if (audioLevel > silenceThreshold) {
+    energy += audioLevel - silenceThreshold;
+    lastAudio = curTime;
+    
+    // Start of sound detected
+    if (quiet) {
+      audioStart = curTime;
+      quiet = false;
       
-      // Schedule return to forward position if we moved backward
-      if (!headDirection) {
-        returningToForward = true;
-        returnToForwardTime = currentTime + HEAD_RETURN_DELAY;
-      }
-    }
-  } 
-  // Handle return to forward position after backward movement
-  else if (returningToForward) {
-    if (currentTime >= returnToForwardTime) {
-      // Move back to forward position
-      bodyMotor.setSpeed(BODY_SPEED);
-      bodyMotor.forward();
-      headMovementEndTime = currentTime + DEFAULT_BODY_FORWARD_TIME;
-      headMoving = true;
-      returningToForward = false;
-      headDirection = true;
-      Serial.println("Head: returning to up position");
-    }
-  }
-  // Decide if we should start a new head movement
-  else if (!headMoving && !returningToForward) {
-    boolean shouldMoveHead = false;
-    
-    // Move head based on audio patterns or timed intervals
-    if (consecutiveLoudSounds >= CONSECUTIVE_SOUNDS_THRESHOLD) {
-      shouldMoveHead = true;
-      consecutiveLoudSounds = 0;
-    } 
-    else if (currentTime - lastHeadMovement > HEAD_MOVEMENT_INTERVAL) {
-      shouldMoveHead = true;
-    }
-    
-    if (shouldMoveHead) {
-      // Decide movement direction - increase chance of tail/backward movement for more dynamics
-      if (!headDirection || random(10) < 4) { // 40% chance to go backward if already forward (was 30%)
-        // Move head backward/down with more varied durations
-        headDirection = false;
-        int duration = 400 + random(300); // 400-700ms (was 300-500ms)
+      // Move to singing position
+      if (!moving && position != 0) {
+        position = 0;
         bodyMotor.setSpeed(BODY_SPEED);
         bodyMotor.backward();
-        headMovementEndTime = currentTime + duration;
-        Serial.println("Head: down");
-      } else {
-        // Small head forward/up adjustment
-        headDirection = true;
-        int duration = 300 + random(200); // 300-500ms (was 200-400ms)
+        moveEndTime = curTime + BODY_BACKWARD_TIME / 2;
+        moving = true;
+      }
+    }
+  } else if (curTime - lastAudio > AUDIO_QUIET_THRESHOLD) {
+    energy = 0;
+    
+    // Start of silence detected
+    if (!quiet) {
+      silenceStart = curTime;
+      quiet = true;
+      
+      // Return to neutral after silence
+      if (curTime - silenceStart > SILENCE_TIMEOUT && !moving && position != 1) {
+        position = 1;
         bodyMotor.setSpeed(BODY_SPEED);
         bodyMotor.forward();
-        headMovementEndTime = currentTime + duration;
-        Serial.println("Head: up");
+        moveEndTime = curTime + BODY_FORWARD_TIME / 3;
+        moving = true;
+      }
+    }
+  }
+  
+  // Handle movement state machine
+  if (moving) {
+    // End movement
+    if (curTime >= moveEndTime) {
+      bodyMotor.setSpeed(0);
+      bodyMotor.release();
+      moving = false;
+    }
+  } 
+  // Consider new movement when idle during audio
+  else if (!moving && !quiet) {
+    boolean shouldMove = false;
+    int target = position;
+    
+    // Important audio moment
+    if (audioLevel > peak * 0.9 && audioLevel > silenceThreshold * 2) {
+      shouldMove = true;
+      target = 2;  // Full forward
+    } 
+    // Random variation during regular singing
+    else if (energy > 10000 && random(5) == 0) {
+      shouldMove = true;
+      target = (position == 0) ? 1 : 0;
+      energy = 0;
+    }
+    
+    // Execute movement if needed
+    if (shouldMove && target != position) {
+      position = target;
+      bodyMotor.setSpeed(BODY_SPEED);
+      
+      if (position == 0) {
+        bodyMotor.backward();
+        moveEndTime = curTime + BODY_BACKWARD_TIME / 2;
+      } else if (position == 1) {
+        bodyMotor.forward();
+        moveEndTime = curTime + BODY_FORWARD_TIME / 3;
+      } else {
+        bodyMotor.forward();
+        moveEndTime = curTime + BODY_FORWARD_TIME / 2;
       }
       
-      headMoving = true;
-      lastHeadMovement = currentTime;
+      moving = true;
     }
   }
 }
 
-// ======= HELP DISPLAY FUNCTION =======
-void printHelp() {
-  // Print concise help only
-  printProgmemString(HELP_TITLE);
-  printProgmemString(HELP_BODY_CMDS);
-  printProgmemString(HELP_MOUTH_CMDS);
-  printProgmemString(HELP_TIME_INFO);
-  printProgmemString(HELP_YAP_CMD);
-  printProgmemString(HELP_STOP_CMD);
-  printProgmemString(HELP_END);
+// ======= UTILITY FUNCTIONS =======
+// Parse integer from command
+int parseInt(const char* prefix) {
+  int val = 0;
+  char fmt[32];
+  snprintf(fmt, sizeof(fmt), "%s %%d", prefix);
+  sscanf(cmdBuf, fmt, &val);
+  return val;
+}
+
+// String comparison helpers
+bool strEq(const char* s1, const char* s2) {
+  return strcmp(s1, s2) == 0;
+}
+
+bool strStart(const char* str, const char* prefix) {
+  return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+
+// Print string from program memory
+void printPgm(const char* str) {
+  char c;
+  while ((c = pgm_read_byte(str++))) Serial.print(c);
+  Serial.println();
 }
