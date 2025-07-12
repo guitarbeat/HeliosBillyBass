@@ -25,6 +25,10 @@
  * m: Toggle manual/auto mode
  * d: Toggle debug mode
  * h: Help menu
+ * 
+ * @author Arduino Community
+ * @version 1.0
+ * @date 2024
  */
 
 // Include all module headers
@@ -54,7 +58,13 @@ MovementCalibration calibration;  // Will use default values from struct definit
 
 bool debugMode = false;
 
-// Initialize the calibration settings in setup()
+/**
+ * @brief Initialize the calibration settings with default values
+ * 
+ * Sets up the movement calibration structure with safe default values
+ * that provide good movement without stressing the motors.
+ * These values can be adjusted via serial commands during operation.
+ */
 void initializeCalibration() {
     calibration.mouthOpenTime = 400;
     calibration.mouthCloseTime = 400;
@@ -64,7 +74,14 @@ void initializeCalibration() {
     calibration.bodySpeed = 100;
 }
 
-// Simple command processing
+/**
+ * @brief Process serial commands from the user
+ * 
+ * Handles all incoming serial commands and executes the appropriate actions.
+ * Commands include movement controls, calibration settings, and mode toggles.
+ * 
+ * @param cmd The single character command to process
+ */
 void processCommand(char cmd) {
     static int value = 0;  // For processing numeric input
     
@@ -95,7 +112,7 @@ void processCommand(char cmd) {
             Serial.println(F("🐟 Resetting to home position..."));
             break;
 
-        // Calibration commands
+        // ===== Calibration Commands =====
         case 't': // Set mouth timing (open,close)
             Serial.println(F("\nMouth Timing Setup:"));
             Serial.println(F("Enter open time (ms): "));
@@ -168,52 +185,63 @@ void processCommand(char cmd) {
             Serial.println(calibration.bodySpeed);
             break;
 
+        // ===== Complex Movement Commands =====
         case 's':
-            // Singing motion
+            // Singing motion - coordinated mouth and body movement
             billy.singingMotion();
             Serial.println(F("Singing motion"));
             break;
+            
+        // ===== Speed Control Commands =====
         case '+':
-            // Speed up
+            // Speed up - increase motor speed by 5
             billy.setMotorSpeed(min(255, billy.getMotorSpeed() + 5));
             Serial.print(F("Speed: "));
             Serial.println(billy.getMotorSpeed());
             break;
         case '-':
-            // Speed down
+            // Speed down - decrease motor speed by 5
             billy.setMotorSpeed(max(0, billy.getMotorSpeed() - 5));
             Serial.print(F("Speed: "));
             Serial.println(billy.getMotorSpeed());
             break;
+            
+        // ===== Mode Control Commands =====
         case 'a':
-            // Toggle audio reactivity
+            // Toggle audio reactivity mode
             fishState.audioReactivityEnabled = !fishState.audioReactivityEnabled;
             Serial.print(F("🎤 Audio reactivity: "));
             Serial.println(fishState.audioReactivityEnabled ? F("ON - Billy will sing along!") : F("OFF - Billy is taking a break"));
             break;
         case 'l':
-            // Toggle manual mode
+            // Toggle manual/automatic mode
             fishState.manualMode = !fishState.manualMode;
             Serial.print(F("🎮 Manual control: "));
             Serial.println(fishState.manualMode ? F("ON - You're in charge!") : F("OFF - Billy's on autopilot"));
             break;
         case 'd':
-            // Toggle debug mode
+            // Toggle debug mode for detailed information
             debugMode = !debugMode;
             Serial.print(F("🔧 Debug mode: "));
             Serial.println(debugMode ? F("ON - Showing technical details") : F("OFF - Keeping it simple"));
             break;
         case 'h':
         case '?':
-            // Print menu
+            // Print help menu
             printMenu();
             break;
         default:
-            // Invalid command
+            // Invalid command - silently ignore
             break;
     }
 }
 
+/**
+ * @brief Print the help menu with all available commands
+ * 
+ * Displays a comprehensive menu of all available commands,
+ * organized by category. In debug mode, also shows current settings.
+ */
 void printMenu() {
     Serial.println(F("\n🐟 === BILLY BASS CONTROL CENTER === 🐟"));
     Serial.println(F("\n📋 MOVEMENT COMMANDS:"));
@@ -232,7 +260,7 @@ void printMenu() {
     Serial.println(F("a: Audio react   d: Debug info"));
     Serial.println(F("l: Manual/auto   h: Show menu"));
     
-    // Print current settings
+    // Print current settings if in debug mode
     if (debugMode) {
         Serial.println(F("\n📊 CURRENT SETTINGS:"));
         Serial.print(F("Mouth timing (open,close): "));
@@ -254,20 +282,27 @@ void printMenu() {
     }
 }
 
+/**
+ * @brief Arduino setup function - runs once at startup
+ * 
+ * Initializes all hardware components, sets up communication,
+ * and displays the welcome message. This is the entry point
+ * for the application.
+ */
 void setup() {
-    // Initialize serial communication
+    // Initialize serial communication for command interface
     Serial.begin(9600);
     
-    // Configure pins
+    // Configure audio input pin
     pinMode(SOUND_PIN, INPUT);
     
-    // Initialize Billy Bass
+    // Initialize Billy Bass controller and motors
     billy.begin();
     
-    // Initialize calibration settings
+    // Initialize calibration settings with default values
     initializeCalibration();
     
-    // Show welcome message and menu
+    // Show welcome message and command menu
     Serial.println(F("\n🎣 === WELCOME TO BILLY BASS === 🎣"));
     Serial.println(F("Your singing fish friend is ready to perform!"));
     Serial.println(F("Starting in manual mode - You're in control!"));
@@ -275,19 +310,29 @@ void setup() {
     printMenu();
 }
 
+/**
+ * @brief Arduino main loop - runs continuously
+ * 
+ * The main application loop that handles:
+ * - Serial command processing
+ * - Audio-reactive behavior (when enabled)
+ * - State machine updates
+ * - Timing management
+ */
 void loop() {
-    // Update current time
+    // Update current time for timing calculations
     timing.current = millis();
     
-    // Process serial commands if available
+    // Process serial commands if available from user
     if (Serial.available() > 0) {
         char input = Serial.read();
         processCommand(input);
     }
     
     // Run audio reactive mode if enabled and not in manual mode
+    // This allows the fish to respond to sound automatically
     if (fishState.audioReactivityEnabled && !fishState.manualMode) {
-        updateSoundInput();
-        stateMachineBillyBass();
+        updateSoundInput();        // Read and process audio input
+        stateMachineBillyBass();   // Update state machine based on audio
     }
 } 
