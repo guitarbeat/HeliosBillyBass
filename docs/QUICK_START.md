@@ -1,4 +1,5 @@
 # BTBillyBass Quick Start Guide
+[← Back to docs index](./index.md)
 
 ## 🚀 Get Up and Running in 10 Minutes
 
@@ -178,9 +179,12 @@ body backward 200
 ## Support Resources
 
 ### Documentation
-- `README.md` - Complete project overview
-- `docs/API.md` - Technical API reference
-- `docs/HARDWARE_SETUP.md` - Detailed hardware guide
+- [Docs Index](./README.md)
+- [Command Reference](./COMMANDS.md)
+- [Troubleshooting](./TROUBLESHOOTING.md)
+- [Hardware Setup](./HARDWARE_SETUP.md)
+- [API Reference](./API.md)
+- [Project Overview](../README.md)
 
 ### Testing Commands
 ```bash

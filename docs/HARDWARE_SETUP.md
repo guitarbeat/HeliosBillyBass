@@ -1,4 +1,5 @@
 # BTBillyBass Hardware Setup Guide
+[← Back to docs index](./index.md)
 
 ## Table of Contents
 1. [Component List](#component-list)
@@ -302,6 +303,7 @@ Microphone ──→ LM386 Amplifier ──→ Arduino A0
 4. Use separate power for motors
 
 ### Diagnostic Commands
+See also: [Command Reference](./COMMANDS.md).
 ```bash
 help                    # Display available commands
 body forward 100        # Quick motor test

@@ -1,4 +1,6 @@
 # BTBillyBass API Documentation
+[← Back to docs index](./index.md)
+See also: [Command Reference](./COMMANDS.md).
 
 ## Table of Contents
 1. [Hardware Configuration](#hardware-configuration)
