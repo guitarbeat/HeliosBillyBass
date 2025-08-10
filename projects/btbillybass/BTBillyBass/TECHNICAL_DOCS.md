@@ -1,5 +1,7 @@
 # BTBillyBass Technical Documentation
 
+> Note: A concise overview now lives in `docs/technical-overview.md`. This file contains the extended technical reference.
+
 ## Table of Contents
 1. [Project Architecture](#project-architecture)
 2. [Hardware Interface](#hardware-interface)

@@ -5,6 +5,19 @@ All notable changes to the BTBillyBass project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-08-10
+
+### Changed
+- Consolidated documentation into `docs/` with focused pages:
+  - `docs/quick-start.md`, `docs/hardware.md`, `docs/commands.md`, `docs/calibration.md`,
+    `docs/troubleshooting.md`, `docs/technical-overview.md`, `docs/contributing.md`
+- Simplified root `README.md` to overview + links
+- Added pointers from `QUICK_START.md` and `TECHNICAL_DOCS.md` to the new docs
+
+### Fixed
+- Synced Quick Start and Calibration defaults with actual sketch values (`initializeCalibration()`)
+- Clarified manual vs audio-reactive mode toggling
+
 ## [1.1.0] - 2024-12-19
 
 ### Added
@@ -78,7 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-### Version 1.1.0 (Current)
+### Version 1.1.1 (Current)
+- **Focus**: Documentation consolidation and navigation improvements
+
+### Version 1.1.0
 - **Focus**: Documentation and code quality improvements
 - **Major Addition**: Comprehensive documentation suite
 - **Impact**: Better user experience and developer onboarding

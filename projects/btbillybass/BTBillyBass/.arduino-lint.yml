@@ -22,3 +22,10 @@ sketch:
   checks:
     # Disable include path checks
     IncludePaths: false 
+
+# arduino-lint configuration
+# This project now lives under projects/btbillybass/BTBillyBass in a monorepo.
+# Adjust CI to run arduino-lint from this directory.
+
+board_manager:
+  additional_urls: [] 
