@@ -1,0 +1,5 @@
+# Local backups
+_backup_pre_simplify_*
+
+# macOS
+.DS_Store
