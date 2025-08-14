@@ -1,16 +1,17 @@
 # HeliosBillyBass
 
-Combined Arduino animatronics workspace with full history preserved (via git subtree), now organized with clearer names.
+Consolidated Arduino animatronics workspace with full history preserved (via git subtree).
 
 ## Structure
-- firmware/helios: Former `HeliosBillyBass` project
-- firmware/btb: Former `BTBillyBass` project
+- firmware/helios: Helios project (docs, mkdocs, examples)
+  - examples/BTBillyBass: example sketch and libs
+- firmware/btb: BTBillyBass project (original structure preserved)
 
-Each subproject keeps its own docs and assets within its folder. See their respective READMEs for setup and usage.
+Each subproject keeps its own docs and assets within its folder.
 
 ## Development
 - Work inside the subfolders under `firmware/`
-- Open the `.ino` projects in Arduino IDE, or your preferred environment
+- Open the `.ino` projects in Arduino IDE or your preferred environment
 
 ## Origin
 This monorepo consolidates the previous repositories after history-preserving merge.
