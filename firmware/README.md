@@ -5,12 +5,14 @@ This workspace hosts multiple firmware-related projects under a unified structur
 ## Layout
 
 - `projects/`
-  - `btbillybass/` – Arduino Big Mouth Billy Bass firmware (primary fish controller)
-  - `helios/` – Documentation site, examples, and supporting materials
+  - `billybass_v2/` – fresh attempt at controlling the fish
+  - `archive/btbillybass/` – original Bluetooth Billy Bass firmware (read-only)
+  - `helios/` – documentation site, examples, and supporting materials
 
 ## Quick start
 
-- BTBillyBass firmware: open `projects/btbillybass/BTBillyBass/BTBillyBass.ino` in the Arduino IDE and build/upload per the project README.
+- New attempt: open `projects/billybass_v2/billybass_v2.ino` in the Arduino IDE and begin implementing.
+- Archived firmware: open `projects/archive/btbillybass/BTBillyBass/BTBillyBass.ino` for reference.
 - Docs and examples: see `projects/helios/README.md` and `projects/helios/docs/`.
 
 ## Conventions
