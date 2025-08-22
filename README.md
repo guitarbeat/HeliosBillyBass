@@ -3,9 +3,9 @@
 Consolidated Arduino animatronics workspace with full history preserved (via git subtree).
 
 ## Structure
-- firmware/helios: Helios project (docs, mkdocs, examples)
-  - examples/BTBillyBass: example sketch and libs
-- firmware/btb: BTBillyBass project (original structure preserved)
+- firmware/projects/billybass_v2: fresh attempt at fish control
+- firmware/projects/archive/btbillybass: archived working prototype
+- firmware/projects/helios: Helios docs, mkdocs site, and examples
 
 Each subproject keeps its own docs and assets within its folder.
 
