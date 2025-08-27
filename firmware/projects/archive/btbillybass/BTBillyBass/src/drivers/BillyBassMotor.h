@@ -6,17 +6,14 @@
 
 /**
  * @file BillyBassMotor.h
- * @brief DC motor control wrapper using MX1508 driver with safety features
- * 
- * This class provides a safe and feature-rich interface for controlling
- * DC motors using the MX1508 motor driver. It includes safety mechanisms
- * to prevent motor damage, smooth speed ramping, and comprehensive
- * state tracking.
- * 
+ * @brief MX1508 DC motor control wrapper
+ *
+ * Provides basic speed and direction control with optional ramping.
+ *
  * @author Arduino Community
  * @version 1.0
  * @date 2024
- * 
+ *
  * @example
  * ```cpp
  * BillyBassMotor motor(5, 3);  // Pin1=5, Pin2=3
@@ -69,41 +66,31 @@ public:
     uint8_t getSpeed() const;
     
     /**
-     * @brief Set motor direction to forward
-     * 
-     * Activates the motor in the forward direction at the current speed.
-     * Includes safety checks and cooldown management.
-     * 
+     * @brief Move motor forward at current speed
+     *
      * @see backward(), stop()
      */
     void forward();
-    
+
     /**
-     * @brief Set motor direction to backward
-     * 
-     * Activates the motor in the backward direction at the current speed.
-     * Includes safety checks and cooldown management.
-     * 
+     * @brief Move motor backward at current speed
+     *
      * @see forward(), stop()
      */
     void backward();
-    
+
     /**
-     * @brief Stop the motor immediately
-     * 
-     * Immediately stops the motor without any ramping.
+     * @brief Immediately stop the motor
+     *
      * Use smoothStop() for gradual deceleration.
-     * 
+     *
      * @see smoothStop(), halt()
      */
     void stop();
-    
+
     /**
-     * @brief Stop the motor (alias for stop())
-     * 
-     * Immediately stops the motor. This is an alias for stop()
-     * for code readability.
-     * 
+     * @brief Alias for stop()
+     *
      * @see stop()
      */
     void halt();
@@ -143,12 +130,8 @@ public:
     
     /**
      * @brief Check if it's safe to move the motor
-     * 
-     * Performs safety checks including cooldown periods and
-     * consecutive movement limits.
-     * 
-     * @return True if motor can be safely activated, false otherwise
-     * @see needsCooldown()
+     *
+     * Placeholder for future safety logic. Currently always true.
      */
     bool isSafeToMove() const;
     
@@ -161,12 +144,10 @@ public:
     void emergencyStop();
     
     /**
-     * @brief Check if motor needs cooldown period
-     * 
-     * Determines if the motor has been running too long and
-     * needs a rest period to prevent overheating.
-     * 
-     * @return True if cooldown is needed, false otherwise
+     * @brief Determine if motor needs a cooldown period
+     *
+     * Placeholder for future logic. Currently always false.
+     *
      * @see isSafeToMove()
      */
     bool needsCooldown() const;
@@ -193,14 +174,9 @@ public:
     
     /**
      * @brief Force movement ignoring safety checks
-     * 
-     * Bypasses all safety mechanisms to force motor movement.
-     * Use only in emergency situations or when safety checks
-     * are preventing necessary operation.
-     * 
+     *
      * @param speed Motor speed (0-255)
      * @param isForward True for forward direction, false for backward
-     * @warning This method bypasses all safety features
      */
     void forceMove(uint8_t speed, bool isForward);
     
@@ -219,6 +195,14 @@ private:
      * used for safety calculations.
      */
     void updateSafetyMetrics();
+
+    /**
+     * @brief Apply speed and direction to the underlying driver
+     *
+     * Helper to reduce duplicated code when setting the motor's speed and
+     * direction. Does not update internal state tracking.
+     */
+    void applySpeedDirection(uint8_t speed, bool isForward);
 };
 
-#endif // BILLYBASSMOTOR_H 
+#endif // BILLYBASSMOTOR_H

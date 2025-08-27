@@ -63,7 +63,7 @@ void BillyBassMotor::stop() {
 }
 
 void BillyBassMotor::halt() {
-    stop();  // Alias for stop
+    stop();
 }
 
 void BillyBassMotor::rampSpeed(uint8_t targetSpeed, bool isForward) {
@@ -78,29 +78,19 @@ void BillyBassMotor::rampSpeed(uint8_t targetSpeed, bool isForward) {
     while (millis() - startTime < RAMP_TIME) {
         float progress = (float)(millis() - startTime) / RAMP_TIME;
         uint8_t speed = startSpeed + (targetSpeed - startSpeed) * progress;
-        
-        _motor.setSpeed(speed);
-        if (isForward) {
-            _motor.forward();
-        } else {
-            _motor.backward();
-        }
-        
+
+        applySpeedDirection(speed, isForward);
+
         if (!isSafeToMove()) {
             emergencyStop();
             return;
         }
-        
+
         delay(5);  // Small delay for smooth ramping
     }
-    
-    // Set final speed
-    _motor.setSpeed(targetSpeed);
-    if (isForward) {
-        _motor.forward();
-    } else {
-        _motor.backward();
-    }
+
+    applySpeedDirection(targetSpeed, isForward);
+    _currentSpeed = targetSpeed;
 }
 
 void BillyBassMotor::smoothStop() {
@@ -153,9 +143,14 @@ void BillyBassMotor::resetRunTime() {
 
 void BillyBassMotor::forceMove(uint8_t speed, bool isForward) {
     setSpeed(speed);
+    applySpeedDirection(_currentSpeed, isForward);
+}
+
+void BillyBassMotor::applySpeedDirection(uint8_t speed, bool isForward) {
+    _motor.setSpeed(speed);
     if (isForward) {
-        forward();
+        _motor.forward();
     } else {
-        backward();
+        _motor.backward();
     }
-} 
+}
