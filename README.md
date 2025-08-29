@@ -1,17 +1,26 @@
 # HeliosBillyBass
 
-Consolidated Arduino animatronics workspace with full history preserved (via git subtree).
+Consolidated Arduino animatronics workspace with full history preserved via git subtree.
 
-## Structure
-- firmware/projects/billybass_v2: fresh attempt at fish control
-- firmware/projects/archive/btbillybass: archived working prototype
-- firmware/projects/helios: Helios docs, mkdocs site, and examples
+## Overview
 
-Each subproject keeps its own docs and assets within its folder.
+This repository groups multiple firmware efforts for the singing fish and supporting Helios documentation.
 
-## Development
-- Work inside the subfolders under `firmware/`
-- Open the `.ino` projects in Arduino IDE or your preferred environment
+## Repository layout
 
-## Origin
-This monorepo consolidates the previous repositories after history-preserving merge.
+- `firmware/` – microcontroller workspace
+  - `projects/billybass_v2/` – fresh attempt at controlling the fish
+  - `projects/archive/btbillybass/` – archived Bluetooth Billy Bass prototype (read-only)
+  - `projects/helios/` – documentation site, examples, and supporting materials
+
+Each project keeps its own source, docs, and libraries within its folder.
+
+## Getting started
+
+1. Navigate to a project under `firmware/projects/`.
+2. Open the respective `.ino` file in the Arduino IDE or your preferred environment.
+3. See `firmware/README.md` for more details.
+
+## History
+
+This monorepo consolidates previous repositories while preserving their history.
