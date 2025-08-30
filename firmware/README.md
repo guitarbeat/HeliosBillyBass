@@ -1,14 +1,14 @@
 # Firmware Workspace
 
-This workspace hosts multiple firmware projects under a unified structure.
+This workspace hosts multiple firmware projects under a unified structure. The table below consolidates project information previously spread across separate READMEs.
 
-## Directory layout
+## Projects
 
-| Path | Description | Entry point |
-| ---- | ----------- | ----------- |
-| `projects/billybass_v2/` | fresh attempt at controlling the fish | `billybass_v2.ino` |
-| `projects/archive/btbillybass/` | original Bluetooth Billy Bass firmware (read-only) | `BTBillyBass.ino` |
-| `projects/helios/` | documentation site, examples, and supporting materials | n/a |
+| Project | Path | Entry point | Notes |
+| ------- | ---- | ----------- | ----- |
+| `billybass_v2` | `projects/billybass_v2/` | `billybass_v2.ino` | fresh attempt at fish control |
+| `archive/btbillybass` | `projects/archive/btbillybass/BTBillyBass/` | `BTBillyBass.ino` | docs in `projects/archive/btbillybass/BTBillyBass/docs/` |
+| `helios` | `projects/helios/` | n/a | docs site and examples supporting the BTBillyBass project |
 
 ## Quick start
 
