@@ -19,10 +19,16 @@ from core.mqtt import start_mqtt
 from core.config import DEBUG_MODE
 
 
+import os
+
+
 def ensure_env_file():
     """Ensure .env file exists, create from example if needed."""
-    env_path = Path(".env")
-    env_example_path = Path(".env.example")
+
+    # Get the project root directory
+    project_root = Path(__file__).parent
+    env_path = project_root / ".env"
+    env_example_path = project_root / ".env.example"
 
     if not env_path.exists():
         if env_example_path.exists():
