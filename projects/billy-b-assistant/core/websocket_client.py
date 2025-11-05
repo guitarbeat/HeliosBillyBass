@@ -10,6 +10,7 @@ from typing import Any, AsyncGenerator, Dict, Optional
 import websockets.asyncio.client
 import websockets.legacy.client
 
+from .config import VOICE, OPENAI_MODEL, OPENAI_API_KEY
 from .openai_config import get_openai_config, get_connection_manager
 
 
