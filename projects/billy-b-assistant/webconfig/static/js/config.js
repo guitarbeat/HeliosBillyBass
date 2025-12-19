@@ -282,8 +282,12 @@ const SettingsForm = (() => {
         document.getElementById("config-form").addEventListener("submit", async function (e) {
             e.preventDefault();
 
-            const resStatus = await fetch("/service/status");
-            const {status: wasActive} = await resStatus.json();
+            const saveBtn = document.getElementById("save-btn");
+            setButtonLoading(saveBtn, true, "Save Settings", "save");
+
+            try {
+                const resStatus = await fetch("/service/status");
+                const {status: wasActive} = await resStatus.json();
 
             const formData = new FormData(this);
             const payload = Object.fromEntries(formData.entries());
@@ -321,21 +325,27 @@ const SettingsForm = (() => {
                 }
             }
 
-            if (wasActive === "active") {
-                await fetch("/service/restart");
-                showNotification("Settings saved – Billy restarted", "success");
-            } else {
-                showNotification("Settings saved", "success");
-            }
+                if (wasActive === "active") {
+                    await fetch("/service/restart");
+                    showNotification("Settings saved – Billy restarted", "success");
+                } else {
+                    showNotification("Settings saved", "success");
+                }
 
-            if (portChanged || hostnameChanged) {
-                const targetHost = hostnameChanged ? `${newHostname}.local` : window.location.hostname;
-                const targetPort = portChanged ? newPort : (window.location.port || 80);
+                if (portChanged || hostnameChanged) {
+                    const targetHost = hostnameChanged ? `${newHostname}.local` : window.location.hostname;
+                    const targetPort = portChanged ? newPort : (window.location.port || 80);
 
-                showNotification(`Redirecting to http://${targetHost}:${targetPort}/...`, "warning", 5000);
-                setTimeout(() => {
-                    window.location.href = `http://${targetHost}:${targetPort}/`;
-                }, 3000);
+                    showNotification(`Redirecting to http://${targetHost}:${targetPort}/...`, "warning", 5000);
+                    setTimeout(() => {
+                        window.location.href = `http://${targetHost}:${targetPort}/`;
+                    }, 3000);
+                }
+            } catch (err) {
+                console.error("Save settings failed:", err);
+                showNotification("Failed to save settings", "error");
+            } finally {
+                setButtonLoading(saveBtn, false, "Save Settings", "save");
             }
         });
     };
@@ -523,8 +533,12 @@ const PersonaForm = (() => {
         document.getElementById("persona-form").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const res = await fetch("/service/status");
-            const {status: wasActive} = await res.json();
+            const saveBtn = document.getElementById("save-persona-btn");
+            setButtonLoading(saveBtn, true, "Save Persona", "person");
+
+            try {
+                const res = await fetch("/service/status");
+                const {status: wasActive} = await res.json();
 
             const personality = {};
             document.querySelectorAll("#personality-sliders div[data-fill-for]").forEach((bar) => {
@@ -558,12 +572,18 @@ const PersonaForm = (() => {
                 body: JSON.stringify({PERSONALITY: personality, BACKSTORY: backstory, META: meta, WAKEUP: wakeup })
             });
 
-            showNotification("Persona saved", "success");
+                showNotification("Persona saved", "success");
 
-            if (wasActive === "active") {
-                await fetch("/service/restart");
-                showNotification("Persona saved – service restarted", "success");
-                ServiceStatus.fetchStatus();
+                if (wasActive === "active") {
+                    await fetch("/service/restart");
+                    showNotification("Persona saved – service restarted", "success");
+                    ServiceStatus.fetchStatus();
+                }
+            } catch (err) {
+                console.error("Save persona failed:", err);
+                showNotification("Failed to save persona", "error");
+            } finally {
+                setButtonLoading(saveBtn, false, "Save Persona", "person");
             }
         });
     };
@@ -771,6 +791,18 @@ document.getElementById("wakeup-sound-list").addEventListener("click", async (e)
 });
 
 // ===================== UI HELPERS =====================
+
+function setButtonLoading(btn, isLoading, originalText = "Save", originalIcon = "save") {
+    if (!btn) return;
+    btn.disabled = isLoading;
+    if (isLoading) {
+        btn.classList.add("opacity-75", "cursor-not-allowed");
+        btn.innerHTML = `<span class="material-icons animate-spin align-middle">refresh</span> Saving...`;
+    } else {
+        btn.classList.remove("opacity-75", "cursor-not-allowed");
+        btn.innerHTML = `<span class="material-icons align-middle">${originalIcon}</span> ${originalText}`;
+    }
+}
 
 function showNotification(message, type = "info", duration = 2500) {
     const bar = document.getElementById("notification");
