@@ -112,10 +112,12 @@
                         <label for="OPENAI_API_KEY"
                                class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
                             OpenAI API Key
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
+                            <button type="button"
+                                    class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1 bg-transparent border-none p-0"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help">
                                 help_outline
-                            </span>
+                            </button>
                         </label>
                         <div class="relative">
                             <div data-tooltip>
@@ -139,6 +141,7 @@
                                     type="button"
                                     onclick="toggleInputVisibility('OPENAI_API_KEY', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle input visibility"
                             >
                                 <span class="material-icons" id="OPENAI_API_KEY_icon">visibility</span>
                             </button>
@@ -148,10 +151,12 @@
                     <label class="block mb-4">
                         <label for="OPENAI_MODEL" class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
                             OpenAI Realtime API Model
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
+                            <button type="button"
+                                    class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1 bg-transparent border-none p-0"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help">
                                 help_outline
-                            </span>
+                            </button>
                         </label>
                         <div class="relative">
                             <div data-tooltip>
@@ -221,8 +226,12 @@
                         <label for="RUN_MODE"
                                class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
                             Mode
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">help_outline</span>
+                            <button type="button"
+                                    class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1 bg-transparent border-none p-0"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help">
+                                help_outline
+                            </button>
                         </label>
 
                         <div class="relative">
@@ -280,8 +289,12 @@
                         <label for="RUN_MODE"
                                class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
                             Motor test
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">help_outline</span>
+                            <button type="button"
+                                    class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1 bg-transparent border-none p-0"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help">
+                                help_outline
+                            </button>
                         </label>
 
                         <div class="relative">
@@ -319,10 +332,12 @@
                         <div class="flex-1/2 flex flex-col justify-between">
                             <label for="MIC_TIMEOUT_SECONDS" class="flex justify-between items-center font-semibold text-sm text-slate-300">
                                 Mic Timeout (s)
-                                <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                      onclick="toggleTooltip(this)">
+                                <button type="button"
+                                        class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1 bg-transparent border-none p-0"
+                                        onclick="toggleTooltip(this)"
+                                        aria-label="Show help">
                                    help_outline
-                                </span>
+                                </button>
                             </label>
                             <div class="relative">
                                 <div data-tooltip>
@@ -349,10 +364,12 @@
                     <div class="mb-4">
                         <label class="flex items-center justify-between font-semibold text-sm text-slate-300 mb-1">
                             Microphone level & Silence Threshold
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
+                            <button type="button"
+                                    class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1 bg-transparent border-none p-0"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help">
                                 help_outline
-                            </span>
+                            </button>
                         </label>
 
                         <div class="flex gap-2 mb-4 relative">
@@ -488,6 +505,7 @@
                                         type="button"
                                         onclick="toggleInputVisibility('MQTT_PASSWORD', this)"
                                         class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                        aria-label="Toggle input visibility"
                                 >
                                     <span class="material-icons" id="MQTT_PASSWORD_icon">visibility</span>
                                 </button>
@@ -525,6 +543,7 @@
                                     type="button"
                                     onclick="toggleInputVisibility('HA_TOKEN', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle input visibility"
                             >
                                 <span class="material-icons" id="HA_TOKEN_icon">visibility</span>
                             </button>
