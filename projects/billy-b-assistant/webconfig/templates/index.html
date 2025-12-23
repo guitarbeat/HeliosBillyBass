@@ -109,14 +109,10 @@
                 {% call ui.section_card("section-software", "Software Settings") %}
 
                     <div class="mb-4 relative">
-                        <label for="OPENAI_API_KEY"
-                               class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            OpenAI API Key
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
-                                help_outline
-                            </span>
-                        </label>
+                        <div class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
+                            <label for="OPENAI_API_KEY">OpenAI API Key</label>
+                            {{ ui.help_button() }}
+                        </div>
                         <div class="relative">
                             <div data-tooltip>
                                 You need a <a href="https://platform.openai.com/account/api-keys"
@@ -146,13 +142,10 @@
                     </div>
 
                     <label class="block mb-4">
-                        <label for="OPENAI_MODEL" class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            OpenAI Realtime API Model
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
-                                help_outline
-                            </span>
-                        </label>
+                        <div class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
+                            <label for="OPENAI_MODEL">OpenAI Realtime API Model</label>
+                            {{ ui.help_button() }}
+                        </div>
                         <div class="relative">
                             <div data-tooltip>
                                 Choose between the two realtime models that are currently available:<br>
@@ -218,12 +211,10 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="RUN_MODE"
-                               class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            Mode
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">help_outline</span>
-                        </label>
+                        <div class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
+                            <label for="RUN_MODE">Mode</label>
+                            {{ ui.help_button() }}
+                        </div>
 
                         <div class="relative">
                             <div data-tooltip>
@@ -277,12 +268,10 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="RUN_MODE"
-                               class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            Motor test
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">help_outline</span>
-                        </label>
+                        <div class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
+                            <label for="RUN_MODE">Motor test</label>
+                            {{ ui.help_button() }}
+                        </div>
 
                         <div class="relative">
                             <div data-tooltip>
@@ -317,13 +306,10 @@
 
                     <div class="flex mb-4 gap-4">
                         <div class="flex-1/2 flex flex-col justify-between">
-                            <label for="MIC_TIMEOUT_SECONDS" class="flex justify-between items-center font-semibold text-sm text-slate-300">
-                                Mic Timeout (s)
-                                <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                      onclick="toggleTooltip(this)">
-                                   help_outline
-                                </span>
-                            </label>
+                            <div class="flex justify-between items-center font-semibold text-sm text-slate-300">
+                                <label for="MIC_TIMEOUT_SECONDS">Mic Timeout (s)</label>
+                                {{ ui.help_button() }}
+                            </div>
                             <div class="relative">
                                 <div data-tooltip>
                                     How many seconds of silence Billy should wait after you stop talking before ending your turn.
@@ -347,13 +333,10 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="flex items-center justify-between font-semibold text-sm text-slate-300 mb-1">
-                            Microphone level & Silence Threshold
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
-                                help_outline
-                            </span>
-                        </label>
+                        <div class="flex items-center justify-between font-semibold text-sm text-slate-300 mb-1">
+                            <span>Microphone level & Silence Threshold</span>
+                            {{ ui.help_button() }}
+                        </div>
 
                         <div class="flex gap-2 mb-4 relative">
                             <div data-tooltip>
