@@ -9,7 +9,7 @@
 {% endmacro %}
 
 {% macro icon_button(button_id, icon_name, title, extra_classes="", icon_extra_classes="", text="", button_type="button") %}
-<button id="{{ button_id }}" class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer{% if extra_classes %} {{ extra_classes }}{% endif %}" title="{{ title }}" type="{{ button_type }}">
+<button id="{{ button_id }}" class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer{% if extra_classes %} {{ extra_classes }}{% endif %}" title="{{ title }}"{% if not text %} aria-label="{{ title }}"{% endif %} type="{{ button_type }}">
     <span class="material-icons{% if icon_extra_classes %} {{ icon_extra_classes }}{% endif %}">{{ icon_name }}</span>
     {% if text %}{{ text }}{% endif %}
 </button>
