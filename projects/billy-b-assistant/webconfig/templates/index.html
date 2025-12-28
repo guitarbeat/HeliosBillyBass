@@ -54,7 +54,8 @@
             <!-- Fullscreen Button (top right) -->
             <button id="toggle-fullscreen-btn"
                     class="sticky top-2 left-full mr-3 bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center"
-                    title="Toggle Fullscreen Log">
+                    title="Toggle Fullscreen Log"
+                    aria-label="Toggle Fullscreen Log">
                 <span class="material-icons" id="fullscreen-icon">fullscreen</span>
             </button>
 
@@ -64,6 +65,7 @@
             <!-- Scroll-to-bottom Button (bottom right) -->
             <button id="scroll-bottom-btn"
                     title="Auto-scroll"
+                    aria-label="Auto-scroll"
                     class="sticky bottom-2 left-full mr-3 ml-auto bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center cursor-pointer">
                 <span class="material-icons">arrow_downward</span>
             </button>
@@ -139,6 +141,7 @@
                                     type="button"
                                     onclick="toggleInputVisibility('OPENAI_API_KEY', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                             >
                                 <span class="material-icons" id="OPENAI_API_KEY_icon">visibility</span>
                             </button>
@@ -488,6 +491,7 @@
                                         type="button"
                                         onclick="toggleInputVisibility('MQTT_PASSWORD', this)"
                                         class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                        aria-label="Toggle password visibility"
                                 >
                                     <span class="material-icons" id="MQTT_PASSWORD_icon">visibility</span>
                                 </button>
@@ -525,6 +529,7 @@
                                     type="button"
                                     onclick="toggleInputVisibility('HA_TOKEN', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                             >
                                 <span class="material-icons" id="HA_TOKEN_icon">visibility</span>
                             </button>
@@ -573,6 +578,7 @@
                                     type="button"
                                     class="dropdown-toggle bg-emerald-500 hover:bg-emerald-400 text-zinc-800 px-2 flex items-center"
                                     onclick="toggleDropdown(this)"
+                                    aria-label="More options"
                             >
                                 <span class="material-icons align-middle transition-transform duration-200">expand_more</span>
                             </button>
@@ -662,6 +668,7 @@
                                     type="button"
                                     class="dropdown-toggle bg-emerald-500 hover:bg-emerald-400 text-zinc-800 px-2 flex items-center"
                                     onclick="toggleDropdown(this)"
+                                    aria-label="More options"
                             >
                                 <span class="material-icons align-middle transition-transform duration-200">expand_more</span>
                             </button>
