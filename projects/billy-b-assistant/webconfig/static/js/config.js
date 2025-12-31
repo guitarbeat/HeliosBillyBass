@@ -791,12 +791,15 @@ function showNotification(message, type = "info", duration = 2500) {
 }
 
 // Toggle password input visibility
-function toggleInputVisibility(inputId) {
+function toggleInputVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     const icon = document.getElementById(`${inputId}_icon`);
     const isHidden = input.type === "password";
     input.type = isHidden ? "text" : "password";
     icon.textContent = isHidden ? "visibility_off" : "visibility";
+    if (btn) {
+        btn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+    }
 }
 
 function toggleDropdown(btn) {
