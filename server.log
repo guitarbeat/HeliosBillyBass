@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/app/projects/billy-b-assistant/webconfig/server.py", line 33, in <module>
+    from core import config as core_config
+  File "/app/projects/billy-b-assistant/core/__init__.py", line 20, in <module>
+    from .audio import (
+  File "/app/projects/billy-b-assistant/core/audio.py", line 16, in <module>
+    from .audio_playback import playback_manager
+  File "/app/projects/billy-b-assistant/core/audio_playback.py", line 29, in <module>
+    from .movements import flap_from_pcm_chunk, interlude, move_head, move_tail_async, stop_all_motors
+  File "/app/projects/billy-b-assistant/core/movements.py", line 31, in <module>
+    h = lgpio.gpiochip_open(0)
+        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/lgpio.py", line 645, in gpiochip_open
+    return _u2i(handle)
+           ^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/lgpio.py", line 458, in _u2i
+    raise error(error_text(v))
+lgpio.error: 'can not open gpiochip'
+✅ persona.ini file created from persona.ini.example
+⚙️ Using third motor: False
