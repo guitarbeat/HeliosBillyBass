@@ -823,10 +823,17 @@ function toggleDropdown(btn) {
 
 function toggleTooltip(el) {
     el.classList.toggle("text-cyan-400")
-    const container = el.closest("label")?.parentElement;
-    if (!container) return;
 
-    const tooltip = container.querySelector("[data-tooltip]");
+    // Try finding the tooltip in the next sibling element (new structure: header div + content div)
+    let container = el.parentElement?.nextElementSibling;
+    let tooltip = container?.querySelector("[data-tooltip]");
+
+    // Fallback: Try finding the tooltip via parent of closest label (old/legacy structure)
+    if (!tooltip) {
+        const legacyContainer = el.closest("label")?.parentElement;
+        tooltip = legacyContainer?.querySelector("[data-tooltip]");
+    }
+
     if (tooltip) {
         const visible = tooltip.getAttribute("data-visible") === "true";
         tooltip.setAttribute("data-visible", visible ? "false" : "true");
