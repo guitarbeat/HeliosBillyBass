@@ -109,14 +109,17 @@
                 {% call ui.section_card("section-software", "Software Settings") %}
 
                     <div class="mb-4 relative">
-                        <label for="OPENAI_API_KEY"
-                               class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            OpenAI API Key
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
-                                help_outline
-                            </span>
-                        </label>
+                        <div class="flex justify-between items-center relative">
+                            <label for="OPENAI_API_KEY" class="font-semibold text-sm text-slate-300">
+                                OpenAI API Key
+                            </label>
+                            <button type="button"
+                                    class="text-slate-300 hover:text-cyan-400 cursor-pointer ml-1 flex items-center"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help for OpenAI API Key">
+                                <span class="material-icons align-middle">help_outline</span>
+                            </button>
+                        </div>
                         <div class="relative">
                             <div data-tooltip>
                                 You need a <a href="https://platform.openai.com/account/api-keys"
@@ -146,13 +149,17 @@
                     </div>
 
                     <label class="block mb-4">
-                        <label for="OPENAI_MODEL" class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            OpenAI Realtime API Model
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
-                                help_outline
-                            </span>
-                        </label>
+                        <div class="flex justify-between items-center relative">
+                            <label for="OPENAI_MODEL" class="font-semibold text-sm text-slate-300">
+                                OpenAI Realtime API Model
+                            </label>
+                            <button type="button"
+                                    class="text-slate-300 hover:text-cyan-400 cursor-pointer ml-1 flex items-center"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help for OpenAI Model">
+                                <span class="material-icons align-middle">help_outline</span>
+                            </button>
+                        </div>
                         <div class="relative">
                             <div data-tooltip>
                                 Choose between the two realtime models that are currently available:<br>
@@ -218,12 +225,17 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="RUN_MODE"
-                               class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            Mode
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">help_outline</span>
-                        </label>
+                        <div class="flex justify-between items-center relative">
+                            <label for="RUN_MODE" class="font-semibold text-sm text-slate-300">
+                                Mode
+                            </label>
+                            <button type="button"
+                                    class="text-slate-300 hover:text-cyan-400 cursor-pointer ml-1 flex items-center"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help for Mode">
+                                <span class="material-icons align-middle">help_outline</span>
+                            </button>
+                        </div>
 
                         <div class="relative">
                             <div data-tooltip>
@@ -277,12 +289,17 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="RUN_MODE"
-                               class="flex justify-between items-center font-semibold text-sm text-slate-300 relative">
-                            Motor test
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">help_outline</span>
-                        </label>
+                        <div class="flex justify-between items-center relative">
+                            <label class="font-semibold text-sm text-slate-300">
+                                Motor test
+                            </label>
+                            <button type="button"
+                                    class="text-slate-300 hover:text-cyan-400 cursor-pointer ml-1 flex items-center"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help for Motor Test">
+                                <span class="material-icons align-middle">help_outline</span>
+                            </button>
+                        </div>
 
                         <div class="relative">
                             <div data-tooltip>
@@ -317,13 +334,17 @@
 
                     <div class="flex mb-4 gap-4">
                         <div class="flex-1/2 flex flex-col justify-between">
-                            <label for="MIC_TIMEOUT_SECONDS" class="flex justify-between items-center font-semibold text-sm text-slate-300">
-                                Mic Timeout (s)
-                                <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                      onclick="toggleTooltip(this)">
-                                   help_outline
-                                </span>
-                            </label>
+                            <div class="flex justify-between items-center">
+                                <label for="MIC_TIMEOUT_SECONDS" class="font-semibold text-sm text-slate-300">
+                                    Mic Timeout (s)
+                                </label>
+                                <button type="button"
+                                        class="text-slate-300 hover:text-cyan-400 cursor-pointer ml-1 flex items-center"
+                                        onclick="toggleTooltip(this)"
+                                        aria-label="Show help for Mic Timeout">
+                                    <span class="material-icons align-middle">help_outline</span>
+                                </button>
+                            </div>
                             <div class="relative">
                                 <div data-tooltip>
                                     How many seconds of silence Billy should wait after you stop talking before ending your turn.
@@ -347,13 +368,17 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="flex items-center justify-between font-semibold text-sm text-slate-300 mb-1">
-                            Microphone level & Silence Threshold
-                            <span class="material-icons align-middle hover:text-cyan-400 cursor-pointer ml-1"
-                                  onclick="toggleTooltip(this)">
-                                help_outline
-                            </span>
-                        </label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-semibold text-sm text-slate-300">
+                                Microphone level & Silence Threshold
+                            </label>
+                            <button type="button"
+                                    class="text-slate-300 hover:text-cyan-400 cursor-pointer ml-1 flex items-center"
+                                    onclick="toggleTooltip(this)"
+                                    aria-label="Show help for Microphone Level">
+                                <span class="material-icons align-middle">help_outline</span>
+                            </button>
+                        </div>
 
                         <div class="flex gap-2 mb-4 relative">
                             <div data-tooltip>
