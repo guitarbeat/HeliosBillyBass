@@ -603,13 +603,13 @@ async function loadWakeupClips() {
 
             row.innerHTML = `
                 <input type="text" class="text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1" value="${phrase}">
-                <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav">
+                <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav" aria-label="Generate .wav">
                     <i class="material-icons align-middle">auto_fix_high</i>
                 </button>
-                <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!has_audio ? 'invisible' : ''}" title="Play .wav">
+                <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!has_audio ? 'invisible' : ''}" title="Play .wav" aria-label="Play .wav">
                     <i class="material-icons align-middle">play_arrow</i>
                 </button>
-                <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove">
+                <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove" aria-label="Remove">
                     <i class="material-icons align-middle">remove_circle_outline</i>
                 </button>
             `;
@@ -634,13 +634,13 @@ function addWakeupSound(index = null, phrase = "", hasAudio = false) {
 
     row.innerHTML = `
         <input type="text" class="text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1" value="${phrase}" placeholder="word or phrase">
-        <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav">
+        <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav" aria-label="Generate .wav">
             <i class="material-icons align-middle">auto_fix_high</i>
         </button>
-        <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!hasAudio ? 'invisible' : ''}" title="Play .wav">
+        <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!hasAudio ? 'invisible' : ''}" title="Play .wav" aria-label="Play .wav">
             <i class="material-icons align-middle">play_arrow</i>
         </button>
-        <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove">
+        <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove" aria-label="Remove">
             <i class="material-icons align-middle">remove_circle_outline</i>
         </button>
     `;

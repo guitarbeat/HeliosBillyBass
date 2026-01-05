@@ -139,6 +139,7 @@
                                     type="button"
                                     onclick="toggleInputVisibility('OPENAI_API_KEY', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                             >
                                 <span class="material-icons" id="OPENAI_API_KEY_icon">visibility</span>
                             </button>
@@ -390,10 +391,10 @@
 
                         <!-- Mic Gain Slider -->
                         <div class="mb-8 flex gap-2 items-center">
-                            <div class="w-20 text-sm font-medium text-gray-200">
+                            <label for="mic-gain" class="w-20 text-sm font-medium text-gray-200">
                                 Gain: <span id="mic-gain-value">8</span>
-                            </div>
-                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="hidden">
+                            </label>
+                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; pointer-events: none;">
                             <div
                                     class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4"
                                     id="mic-gain-bar"
@@ -422,7 +423,7 @@
                         </label>
                         <div class="flex gap-2 items-center">
                             <input type="range" id="speaker-volume" min="0" max="100" value="50"
-                                   class="hidden">
+                                   style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; pointer-events: none;">
                             <div
                                     class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4"
                                     id="speaker-volume-bar"
@@ -488,6 +489,7 @@
                                         type="button"
                                         onclick="toggleInputVisibility('MQTT_PASSWORD', this)"
                                         class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                        aria-label="Toggle password visibility"
                                 >
                                     <span class="material-icons" id="MQTT_PASSWORD_icon">visibility</span>
                                 </button>
@@ -525,6 +527,7 @@
                                     type="button"
                                     onclick="toggleInputVisibility('HA_TOKEN', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                             >
                                 <span class="material-icons" id="HA_TOKEN_icon">visibility</span>
                             </button>
