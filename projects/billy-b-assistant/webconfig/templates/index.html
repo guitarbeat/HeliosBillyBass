@@ -54,8 +54,9 @@
             <!-- Fullscreen Button (top right) -->
             <button id="toggle-fullscreen-btn"
                     class="sticky top-2 left-full mr-3 bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center"
-                    title="Toggle Fullscreen Log">
-                <span class="material-icons" id="fullscreen-icon">fullscreen</span>
+                    title="Toggle Fullscreen Log"
+                    aria-label="Toggle Fullscreen Log">
+                <span class="material-icons" id="fullscreen-icon" aria-hidden="true">fullscreen</span>
             </button>
 
             <pre id="log-output"
@@ -64,8 +65,9 @@
             <!-- Scroll-to-bottom Button (bottom right) -->
             <button id="scroll-bottom-btn"
                     title="Auto-scroll"
+                    aria-label="Auto-scroll"
                     class="sticky bottom-2 left-full mr-3 ml-auto bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center cursor-pointer">
-                <span class="material-icons">arrow_downward</span>
+                <span class="material-icons" aria-hidden="true">arrow_downward</span>
             </button>
         </div>
     </section>
@@ -139,8 +141,9 @@
                                     type="button"
                                     onclick="toggleInputVisibility('OPENAI_API_KEY', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                             >
-                                <span class="material-icons" id="OPENAI_API_KEY_icon">visibility</span>
+                                <span class="material-icons" id="OPENAI_API_KEY_icon" aria-hidden="true">visibility</span>
                             </button>
                         </div>
                     </div>
@@ -488,8 +491,9 @@
                                         type="button"
                                         onclick="toggleInputVisibility('MQTT_PASSWORD', this)"
                                         class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                                 >
-                                    <span class="material-icons" id="MQTT_PASSWORD_icon">visibility</span>
+                                <span class="material-icons" id="MQTT_PASSWORD_icon" aria-hidden="true">visibility</span>
                                 </button>
                             </div>
                         </div>
@@ -525,8 +529,9 @@
                                     type="button"
                                     onclick="toggleInputVisibility('HA_TOKEN', this)"
                                     class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Toggle password visibility"
                             >
-                                <span class="material-icons" id="HA_TOKEN_icon">visibility</span>
+                                <span class="material-icons" id="HA_TOKEN_icon" aria-hidden="true">visibility</span>
                             </button>
                         </div>
                     </div>
