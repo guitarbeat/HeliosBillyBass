@@ -394,9 +394,9 @@
                             <div class="w-20 text-sm font-medium text-gray-200">
                                 Gain: <span id="mic-gain-value">8</span>
                             </div>
-                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="hidden">
+                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="sr-only peer" aria-label="Microphone Gain">
                             <div
-                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4"
+                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4 peer-focus:ring-2 peer-focus:ring-emerald-500"
                                     id="mic-gain-bar"
                                     style="user-select: none;"
                             >
@@ -423,9 +423,9 @@
                         </label>
                         <div class="flex gap-2 items-center">
                             <input type="range" id="speaker-volume" min="0" max="100" value="50"
-                                   class="hidden">
+                                   class="sr-only peer">
                             <div
-                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4"
+                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4 peer-focus:ring-2 peer-focus:ring-emerald-500"
                                     id="speaker-volume-bar"
                                     style="user-select: none;"
                             >
