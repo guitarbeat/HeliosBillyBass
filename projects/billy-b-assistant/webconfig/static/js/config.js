@@ -484,6 +484,7 @@ const PersonaForm = (() => {
         // Allow dragging
         bar.addEventListener("mousedown", (e) => {
             isDragging = true;
+            input.focus(); // Ensure keyboard control works immediately
             updateFromMouse(e);
         });
 
