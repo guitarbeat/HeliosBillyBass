@@ -54,8 +54,9 @@
             <!-- Fullscreen Button (top right) -->
             <button id="toggle-fullscreen-btn"
                     class="sticky top-2 left-full mr-3 bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center"
-                    title="Toggle Fullscreen Log">
-                <span class="material-icons" id="fullscreen-icon">fullscreen</span>
+                    title="Toggle Fullscreen Log"
+                    aria-label="Toggle Fullscreen Log">
+                <span class="material-icons" id="fullscreen-icon" aria-hidden="true">fullscreen</span>
             </button>
 
             <pre id="log-output"
@@ -64,8 +65,9 @@
             <!-- Scroll-to-bottom Button (bottom right) -->
             <button id="scroll-bottom-btn"
                     title="Auto-scroll"
-                    class="sticky bottom-2 left-full mr-3 ml-auto bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center cursor-pointer">
-                <span class="material-icons">arrow_downward</span>
+                    class="sticky bottom-2 left-full mr-3 ml-auto bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded z-10 shadow flex items-center justify-center cursor-pointer"
+                    aria-label="Auto-scroll">
+                <span class="material-icons" aria-hidden="true">arrow_downward</span>
             </button>
         </div>
     </section>
@@ -394,9 +396,9 @@
                             <div class="w-20 text-sm font-medium text-gray-200">
                                 Gain: <span id="mic-gain-value">8</span>
                             </div>
-                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="hidden">
+                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="sr-only peer">
                             <div
-                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4"
+                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4 peer-focus:ring-2 peer-focus:ring-emerald-500 peer-focus:outline-none"
                                     id="mic-gain-bar"
                                     style="user-select: none;"
                             >
@@ -423,9 +425,9 @@
                         </label>
                         <div class="flex gap-2 items-center">
                             <input type="range" id="speaker-volume" min="0" max="100" value="50"
-                                   class="hidden">
+                                   class="sr-only peer">
                             <div
-                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4"
+                                    class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4 peer-focus:ring-2 peer-focus:ring-emerald-500 peer-focus:outline-none"
                                     id="speaker-volume-bar"
                                     style="user-select: none;"
                             >
@@ -576,6 +578,9 @@
                                     type="button"
                                     class="dropdown-toggle bg-emerald-500 hover:bg-emerald-400 text-zinc-800 px-2 flex items-center"
                                     onclick="toggleDropdown(this)"
+                                    aria-label="More options"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
                             >
                                 <span class="material-icons align-middle transition-transform duration-200">expand_more</span>
                             </button>
@@ -665,6 +670,9 @@
                                     type="button"
                                     class="dropdown-toggle bg-emerald-500 hover:bg-emerald-400 text-zinc-800 px-2 flex items-center"
                                     onclick="toggleDropdown(this)"
+                                    aria-label="More options"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
                             >
                                 <span class="material-icons align-middle transition-transform duration-200">expand_more</span>
                             </button>
