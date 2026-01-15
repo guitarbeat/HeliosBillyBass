@@ -225,10 +225,12 @@ const ServiceStatus = (() => {
         const createButton = (label, action, color, iconName) => {
             const btn = document.createElement("button");
             btn.className = `flex items-center gap-1 bg-${color}-500 hover:bg-${color}-400 text-zinc-800 font-semibold py-1 px-2 rounded`;
+            btn.setAttribute("aria-label", label);
 
             const icon = document.createElement("i");
             icon.className = "material-icons";
             icon.textContent = iconName;
+            icon.setAttribute("aria-hidden", "true");
             btn.appendChild(icon);
 
             const labelSpan = document.createElement("span");
@@ -603,14 +605,14 @@ async function loadWakeupClips() {
 
             row.innerHTML = `
                 <input type="text" class="text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1" value="${phrase}">
-                <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav">
-                    <i class="material-icons align-middle">auto_fix_high</i>
+                <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav" aria-label="Generate .wav">
+                    <i class="material-icons align-middle" aria-hidden="true">auto_fix_high</i>
                 </button>
-                <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!has_audio ? 'invisible' : ''}" title="Play .wav">
-                    <i class="material-icons align-middle">play_arrow</i>
+                <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!has_audio ? 'invisible' : ''}" title="Play .wav" aria-label="Play .wav">
+                    <i class="material-icons align-middle" aria-hidden="true">play_arrow</i>
                 </button>
-                <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove">
-                    <i class="material-icons align-middle">remove_circle_outline</i>
+                <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove" aria-label="Remove">
+                    <i class="material-icons align-middle" aria-hidden="true">remove_circle_outline</i>
                 </button>
             `;
 
@@ -634,14 +636,14 @@ function addWakeupSound(index = null, phrase = "", hasAudio = false) {
 
     row.innerHTML = `
         <input type="text" class="text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1" value="${phrase}" placeholder="word or phrase">
-        <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav">
-            <i class="material-icons align-middle">auto_fix_high</i>
+        <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav" aria-label="Generate .wav">
+            <i class="material-icons align-middle" aria-hidden="true">auto_fix_high</i>
         </button>
-        <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!hasAudio ? 'invisible' : ''}" title="Play .wav">
-            <i class="material-icons align-middle">play_arrow</i>
+        <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!hasAudio ? 'invisible' : ''}" title="Play .wav" aria-label="Play .wav">
+            <i class="material-icons align-middle" aria-hidden="true">play_arrow</i>
         </button>
-        <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove">
-            <i class="material-icons align-middle">remove_circle_outline</i>
+        <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove" aria-label="Remove">
+            <i class="material-icons align-middle" aria-hidden="true">remove_circle_outline</i>
         </button>
     `;
 
