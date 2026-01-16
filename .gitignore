@@ -71,3 +71,5 @@ persona.ini
 versions.ini
 venv
 webconfig/node_modules
+node_modules/
+projects/billy-b-assistant/webconfig/node_modules/
