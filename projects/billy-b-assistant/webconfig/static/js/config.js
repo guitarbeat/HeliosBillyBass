@@ -823,10 +823,24 @@ function toggleDropdown(btn) {
 
 function toggleTooltip(el) {
     el.classList.toggle("text-cyan-400")
-    const container = el.closest("label")?.parentElement;
-    if (!container) return;
 
-    const tooltip = container.querySelector("[data-tooltip]");
+    let tooltip = null;
+
+    // Strategy: The trigger is in a header/label row. The tooltip is in the next sibling container.
+    // This works for both the legacy <label> wrapper and the new <div> wrapper.
+    const header = el.closest(".flex.justify-between");
+    if (header && header.nextElementSibling) {
+        tooltip = header.nextElementSibling.querySelector("[data-tooltip]");
+    }
+
+    // Fallback: Try finding it in the parent container directly (legacy backup)
+    if (!tooltip) {
+        const container = el.parentElement?.parentElement;
+        if (container) {
+            tooltip = container.querySelector("[data-tooltip]");
+        }
+    }
+
     if (tooltip) {
         const visible = tooltip.getAttribute("data-visible") === "true";
         tooltip.setAttribute("data-visible", visible ? "false" : "true");
