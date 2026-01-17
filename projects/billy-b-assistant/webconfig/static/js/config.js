@@ -823,7 +823,10 @@ function toggleDropdown(btn) {
 
 function toggleTooltip(el) {
     el.classList.toggle("text-cyan-400")
-    const container = el.closest("label")?.parentElement;
+    // Support both old structure (button inside label) and new structure (button sibling of label)
+    // Old: Button -> Label -> Container
+    // New: Button -> Header(div) -> Container
+    const container = el.closest("label")?.parentElement || el.parentElement?.parentElement;
     if (!container) return;
 
     const tooltip = container.querySelector("[data-tooltip]");
