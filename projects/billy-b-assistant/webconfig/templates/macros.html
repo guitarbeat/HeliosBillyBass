@@ -18,3 +18,24 @@
     {% if text %}{{ text }}{% endif %}
 </button>
 {% endmacro %}
+
+{% macro label_with_help(for_id, label_text, tooltip_text) %}
+    <div class="flex justify-between items-center mb-1">
+        <label for="{{ for_id }}" class="font-semibold text-sm text-slate-300">
+            {{ label_text }}
+        </label>
+        <button type="button"
+                class="text-slate-400 hover:text-cyan-400 focus:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded-full p-0.5 cursor-pointer flex items-center justify-center transition-colors"
+                onclick="toggleTooltip(this)"
+                aria-label="More information about {{ label_text }}"
+                aria-expanded="false">
+             <span class="material-icons text-base" aria-hidden="true">help_outline</span>
+        </button>
+    </div>
+    <div class="relative">
+        <div data-tooltip>
+            {{ tooltip_text | safe }}
+        </div>
+        {{ caller() }}
+    </div>
+{% endmacro %}

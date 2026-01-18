@@ -822,14 +822,25 @@ function toggleDropdown(btn) {
 }
 
 function toggleTooltip(el) {
-    el.classList.toggle("text-cyan-400")
-    const container = el.closest("label")?.parentElement;
+    el.classList.toggle("text-cyan-400");
+    let container = el.closest("label")?.parentElement;
+
+    if (!container) {
+        // Fallback for new structure where button is sibling to label
+        // Button -> flex wrapper -> main container
+        container = el.parentElement?.parentElement;
+    }
+
     if (!container) return;
 
     const tooltip = container.querySelector("[data-tooltip]");
     if (tooltip) {
         const visible = tooltip.getAttribute("data-visible") === "true";
         tooltip.setAttribute("data-visible", visible ? "false" : "true");
+
+        if (el.tagName === 'BUTTON') {
+            el.setAttribute('aria-expanded', !visible);
+        }
     }
 }
 
