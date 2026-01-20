@@ -18,3 +18,16 @@
     {% if text %}{{ text }}{% endif %}
 </button>
 {% endmacro %}
+
+{% macro label_with_help(for_id, label_text, extra_classes="") %}
+<div class="flex justify-between items-center {{ extra_classes }}">
+    {% if for_id %}
+    <label for="{{ for_id }}" class="font-semibold text-sm text-slate-300">{{ label_text }}</label>
+    {% else %}
+    <span class="font-semibold text-sm text-slate-300">{{ label_text }}</span>
+    {% endif %}
+    <button type="button" class="text-slate-400 hover:text-cyan-400 cursor-pointer focus:outline-none focus:text-cyan-400 transition-colors rounded" onclick="toggleTooltip(this)" aria-label="Help for {{ label_text }}">
+        <span class="material-icons align-middle text-base" aria-hidden="true">help_outline</span>
+    </button>
+</div>
+{% endmacro %}
