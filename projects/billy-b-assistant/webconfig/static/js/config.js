@@ -1165,16 +1165,19 @@ const MotorPanel = (() => {
 const Sections = (() => {
     function collapsible() {
         document.querySelectorAll('.collapsible-section').forEach(section => {
-            const header = section.querySelector('h3');
-            if (!header) return;
+            const toggleEl = section.querySelector('h3 button') || section.querySelector('h3');
+            if (!toggleEl) return;
+
+            const contentEl = section.querySelector('[role="region"]');
+            const isButton = toggleEl.tagName === 'BUTTON';
 
             // Add icon if not present
-            let icon = header.querySelector('.material-icons');
+            let icon = toggleEl.querySelector('.material-icons');
             if (!icon) {
                 icon = document.createElement('span');
                 icon.className = 'material-icons transition-transform duration-200 ml-2 rotate-0';
                 icon.textContent = 'expand_more';
-                header.appendChild(icon);
+                toggleEl.appendChild(icon);
             } else {
                 icon.classList.add('transition-transform', 'duration-200', 'ml-2');
                 icon.classList.add('rotate-0');
@@ -1182,29 +1185,53 @@ const Sections = (() => {
 
             // Restore state from localStorage
             const id = section.id;
-            const collapsed = localStorage.getItem('collapse_' + id) === 'closed';
+            const isClosed = localStorage.getItem('collapse_' + id) === 'closed';
 
-            icon.classList.toggle('rotate-180', !collapsed);
-            icon.classList.toggle('rotate-0', collapsed);
-            header.classList.toggle('mb-4', !collapsed);
+            // Apply state
+            icon.classList.toggle('rotate-180', !isClosed);
+            icon.classList.toggle('rotate-0', isClosed);
+            toggleEl.classList.toggle('mb-4', !isClosed);
+            section.classList.toggle('collapsed', isClosed);
 
-            [...section.children].forEach(child => {
-                if (child !== header) child.classList.toggle('hidden', collapsed);
-            });
+            if (isButton) {
+                toggleEl.setAttribute('aria-expanded', !isClosed);
+            }
 
-            // Click to toggle
-            header.addEventListener('click', () => {
-                const collapsed = section.classList.toggle('collapsed');
+            if (contentEl) {
+                contentEl.classList.toggle('hidden', isClosed);
+            } else {
+                const headerContainer = toggleEl.closest('h3') || toggleEl;
                 [...section.children].forEach(child => {
-                    if (child !== header) child.classList.toggle('hidden', collapsed);
+                    if (child !== headerContainer) child.classList.toggle('hidden', isClosed);
                 });
-                icon.classList.toggle('rotate-180', !collapsed);
-                icon.classList.toggle('rotate-0', collapsed);
+            }
 
-                // Toggle mb-4 on h3 only when expanded
-                header.classList.toggle('mb-4', !collapsed);
+            // Click listener
+            toggleEl.addEventListener('click', (e) => {
+                // Determine next state
+                const currentlyClosed = section.classList.contains('collapsed');
+                const willClose = !currentlyClosed;
 
-                localStorage.setItem('collapse_' + id, collapsed ? 'closed' : 'open');
+                // Toggle UI
+                icon.classList.toggle('rotate-180', !willClose);
+                icon.classList.toggle('rotate-0', willClose);
+                toggleEl.classList.toggle('mb-4', !willClose);
+                section.classList.toggle('collapsed', willClose);
+
+                if (isButton) {
+                    toggleEl.setAttribute('aria-expanded', !willClose);
+                }
+
+                if (contentEl) {
+                    contentEl.classList.toggle('hidden', willClose);
+                } else {
+                    const headerContainer = toggleEl.closest('h3') || toggleEl;
+                    [...section.children].forEach(child => {
+                        if (child !== headerContainer) child.classList.toggle('hidden', willClose);
+                    });
+                }
+
+                localStorage.setItem('collapse_' + id, willClose ? 'closed' : 'open');
             });
         });
     }
