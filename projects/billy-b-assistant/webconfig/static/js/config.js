@@ -1169,13 +1169,17 @@ const Sections = (() => {
             const header = section.querySelector('h3');
             if (!header) return;
 
+            // Check if we have the new button structure
+            const btn = header.querySelector('button');
+            const toggleTarget = btn || header;
+
             // Add icon if not present
-            let icon = header.querySelector('.material-icons');
+            let icon = toggleTarget.querySelector('.material-icons');
             if (!icon) {
                 icon = document.createElement('span');
                 icon.className = 'material-icons transition-transform duration-200 ml-2 rotate-0';
                 icon.textContent = 'expand_more';
-                header.appendChild(icon);
+                toggleTarget.appendChild(icon);
             } else {
                 icon.classList.add('transition-transform', 'duration-200', 'ml-2');
                 icon.classList.add('rotate-0');
@@ -1183,18 +1187,23 @@ const Sections = (() => {
 
             // Restore state from localStorage
             const id = section.id;
-            const collapsed = localStorage.getItem('collapse_' + id) === 'closed';
+            const isClosed = localStorage.getItem('collapse_' + id) === 'closed';
 
-            icon.classList.toggle('rotate-180', !collapsed);
-            icon.classList.toggle('rotate-0', collapsed);
-            header.classList.toggle('mb-4', !collapsed);
+            // Sync initial state
+            if (isClosed) section.classList.add('collapsed');
+
+            icon.classList.toggle('rotate-180', !isClosed);
+            icon.classList.toggle('rotate-0', isClosed);
+            header.classList.toggle('mb-4', !isClosed);
+
+            if (btn) btn.setAttribute('aria-expanded', !isClosed);
 
             [...section.children].forEach(child => {
-                if (child !== header) child.classList.toggle('hidden', collapsed);
+                if (child !== header) child.classList.toggle('hidden', isClosed);
             });
 
             // Click to toggle
-            header.addEventListener('click', () => {
+            toggleTarget.addEventListener('click', () => {
                 const collapsed = section.classList.toggle('collapsed');
                 [...section.children].forEach(child => {
                     if (child !== header) child.classList.toggle('hidden', collapsed);
@@ -1204,6 +1213,8 @@ const Sections = (() => {
 
                 // Toggle mb-4 on h3 only when expanded
                 header.classList.toggle('mb-4', !collapsed);
+
+                if (btn) btn.setAttribute('aria-expanded', !collapsed);
 
                 localStorage.setItem('collapse_' + id, collapsed ? 'closed' : 'open');
             });
