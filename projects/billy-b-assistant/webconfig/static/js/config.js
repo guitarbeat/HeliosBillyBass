@@ -1166,46 +1166,87 @@ const MotorPanel = (() => {
 const Sections = (() => {
     function collapsible() {
         document.querySelectorAll('.collapsible-section').forEach(section => {
-            const header = section.querySelector('h3');
-            if (!header) return;
+            // Attempt to find the new accessible button
+            let toggleEl = section.querySelector('button[aria-controls]');
+            let isLegacy = false;
 
-            // Add icon if not present
-            let icon = header.querySelector('.material-icons');
-            if (!icon) {
-                icon = document.createElement('span');
-                icon.className = 'material-icons transition-transform duration-200 ml-2 rotate-0';
-                icon.textContent = 'expand_more';
-                header.appendChild(icon);
-            } else {
-                icon.classList.add('transition-transform', 'duration-200', 'ml-2');
-                icon.classList.add('rotate-0');
+            // Fallback for legacy markup if button not found
+            if (!toggleEl) {
+                toggleEl = section.querySelector('h3');
+                isLegacy = true;
             }
+
+            if (!toggleEl) return;
+
+            const header = section.querySelector('h3');
+            const icon = toggleEl.querySelector('.material-icons') || (header ? header.querySelector('.material-icons') : null);
 
             // Restore state from localStorage
             const id = section.id;
-            const collapsed = localStorage.getItem('collapse_' + id) === 'closed';
+            const isClosed = localStorage.getItem('collapse_' + id) === 'closed';
 
-            icon.classList.toggle('rotate-180', !collapsed);
-            icon.classList.toggle('rotate-0', collapsed);
-            header.classList.toggle('mb-4', !collapsed);
+            // Initial State
+            if (isClosed) {
+                section.classList.add('collapsed');
+                if (icon) {
+                    icon.classList.remove('rotate-180');
+                    icon.classList.add('rotate-0');
+                }
+                if (header) header.classList.remove('mb-4');
+                if (!isLegacy) toggleEl.setAttribute('aria-expanded', 'false');
+            } else {
+                section.classList.remove('collapsed');
+                if (icon) {
+                    icon.classList.add('rotate-180');
+                    icon.classList.remove('rotate-0');
+                }
+                if (header) header.classList.add('mb-4');
+                if (!isLegacy) toggleEl.setAttribute('aria-expanded', 'true');
+            }
 
-            [...section.children].forEach(child => {
-                if (child !== header) child.classList.toggle('hidden', collapsed);
-            });
-
-            // Click to toggle
-            header.addEventListener('click', () => {
-                const collapsed = section.classList.toggle('collapsed');
+            // Hide/Show content based on initial state
+            if (isLegacy) {
                 [...section.children].forEach(child => {
-                    if (child !== header) child.classList.toggle('hidden', collapsed);
+                    if (child !== header) child.classList.toggle('hidden', isClosed);
                 });
-                icon.classList.toggle('rotate-180', !collapsed);
-                icon.classList.toggle('rotate-0', collapsed);
+            } else {
+                const contentId = toggleEl.getAttribute('aria-controls');
+                const content = document.getElementById(contentId);
+                if (content) content.classList.toggle('hidden', isClosed);
+            }
 
-                // Toggle mb-4 on h3 only when expanded
-                header.classList.toggle('mb-4', !collapsed);
+            // Click Handler
+            toggleEl.addEventListener('click', (e) => {
+                // For legacy, prevent text selection double clicks
+                if (isLegacy) e.preventDefault();
 
-                localStorage.setItem('collapse_' + id, collapsed ? 'closed' : 'open');
+                const wasClosed = section.classList.contains('collapsed');
+                const nowClosed = !wasClosed;
+
+                section.classList.toggle('collapsed', nowClosed);
+
+                // Update content visibility
+                if (isLegacy) {
+                    [...section.children].forEach(child => {
+                        if (child !== header) child.classList.toggle('hidden', nowClosed);
+                    });
+                } else {
+                    const contentId = toggleEl.getAttribute('aria-controls');
+                    const content = document.getElementById(contentId);
+                    if (content) content.classList.toggle('hidden', nowClosed);
+                    toggleEl.setAttribute('aria-expanded', !nowClosed);
+                }
+
+                // Rotate icon
+                if (icon) {
+                    icon.classList.toggle('rotate-180', !nowClosed);
+                    icon.classList.toggle('rotate-0', nowClosed);
+                }
+
+                // Toggle header margin
+                if (header) header.classList.toggle('mb-4', !nowClosed);
+
+                localStorage.setItem('collapse_' + id, nowClosed ? 'closed' : 'open');
             });
         });
     }
