@@ -11,3 +11,7 @@
 ## 2025-10-27 - [Accessible Collapsible Sections]
 **Learning:** Collapsible sections used non-semantic `<h3>` elements as click targets, making them inaccessible to keyboard users and screen readers.
 **Action:** Refactored `section_card` macro to use a semantic `<button>` inside the header with `aria-expanded` and `aria-controls` attributes. Updated JavaScript to toggle ARIA states and handle the new structure while maintaining backward compatibility.
+
+## 2025-10-28 - [Dynamic Icon Button Accessibility]
+**Learning:** Buttons generated dynamically via JavaScript (e.g., service controls, wake-up list) often lack accessible names when they rely on `title` or hidden text spans. Material Icons' ligature text (e.g., "play_arrow") can be read aloud by screen readers if not hidden.
+**Action:** When creating buttons in JS, explicitly set `aria-label` matching the visual tooltip/label. Always add `aria-hidden="true"` to the icon element to prevent confusing announcements.
