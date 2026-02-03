@@ -599,23 +599,7 @@ async function loadWakeupClips() {
         }
 
         clips.sort((a, b) => a.index - b.index).forEach(({ index, phrase, has_audio }) => {
-            const row = document.createElement("div");
-            row.className = "flex items-center space-x-2";
-            row.dataset.index = index;
-
-            row.innerHTML = `
-                <input type="text" class="text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1" value="${phrase}">
-                <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav" aria-label="Generate .wav">
-                    <i class="material-icons align-middle" aria-hidden="true">auto_fix_high</i>
-                </button>
-                <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!has_audio ? 'invisible' : ''}" title="Play .wav" aria-label="Play .wav">
-                    <i class="material-icons align-middle" aria-hidden="true">play_arrow</i>
-                </button>
-                <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove" aria-label="Remove">
-                    <i class="material-icons align-middle" aria-hidden="true">remove_circle_outline</i>
-                </button>
-            `;
-
+            const row = createWakeupRow(index, phrase, has_audio);
             container.appendChild(row);
         });
     } catch (err) {
@@ -624,29 +608,48 @@ async function loadWakeupClips() {
     }
 }
 
+function createWakeupRow(index, phrase = "", hasAudio = false) {
+    const row = document.createElement("div");
+    row.className = "flex items-center space-x-2";
+    row.dataset.index = index;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1";
+    input.value = phrase;
+    if (!phrase) input.placeholder = "word or phrase";
+    row.appendChild(input);
+
+    const createBtn = (cls, title, iconName, hidden = false) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `${cls} ${hidden ? 'invisible' : ''}`;
+        btn.title = title;
+        btn.setAttribute("aria-label", title);
+
+        const icon = document.createElement("i");
+        icon.className = "material-icons align-middle";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = iconName;
+        btn.appendChild(icon);
+
+        return btn;
+    };
+
+    row.appendChild(createBtn("wakeup-generate-btn text-white hover:text-amber-400", "Generate .wav", "auto_fix_high"));
+    row.appendChild(createBtn("wakeup-play-btn text-white hover:text-emerald-400", "Play .wav", "play_arrow", !hasAudio));
+    row.appendChild(createBtn("remove-wakeup-row text-rose-500 hover:text-rose-400", "Remove", "remove_circle_outline"));
+
+    return row;
+}
+
 function addWakeupSound(index = null, phrase = "", hasAudio = false) {
     const container = document.getElementById("wakeup-sound-list");
     const rows = container.querySelectorAll("div[data-index]");
     const usedIndices = Array.from(rows).map(row => parseInt(row.dataset.index));
     const nextIndex = index ?? (usedIndices.length > 0 ? Math.max(...usedIndices) + 1 : 1);
 
-    const row = document.createElement("div");
-    row.className = "flex items-center space-x-2";
-    row.dataset.index = nextIndex;
-
-    row.innerHTML = `
-        <input type="text" class="text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1" value="${phrase}" placeholder="word or phrase">
-        <button type="button" class="wakeup-generate-btn text-white hover:text-amber-400" title="Generate .wav" aria-label="Generate .wav">
-            <i class="material-icons align-middle" aria-hidden="true">auto_fix_high</i>
-        </button>
-        <button type="button" class="wakeup-play-btn text-white hover:text-emerald-400 ${!hasAudio ? 'invisible' : ''}" title="Play .wav" aria-label="Play .wav">
-            <i class="material-icons align-middle" aria-hidden="true">play_arrow</i>
-        </button>
-        <button type="button" class="remove-wakeup-row text-rose-500 hover:text-rose-400" title="Remove" aria-label="Remove">
-            <i class="material-icons align-middle" aria-hidden="true">remove_circle_outline</i>
-        </button>
-    `;
-
+    const row = createWakeupRow(nextIndex, phrase, hasAudio);
     container.appendChild(row);
 }
 
