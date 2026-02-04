@@ -224,6 +224,7 @@ const ServiceStatus = (() => {
         controlsEl.innerHTML = "";
         const createButton = (label, action, color, iconName) => {
             const btn = document.createElement("button");
+            btn.setAttribute("aria-label", label);
             btn.className = `flex items-center gap-1 bg-${color}-500 hover:bg-${color}-400 text-zinc-800 font-semibold py-1 px-2 rounded`;
 
             const icon = document.createElement("i");
@@ -400,51 +401,73 @@ const PersonaForm = (() => {
 
         for (const [key, value] of Object.entries(personality)) {
             const wrapper = document.createElement("div");
-            wrapper.className = "flex gap-2 space-y-1";
+            wrapper.className = "flex gap-2 items-center mb-2";
 
             // Label column
-            const label = document.createElement("div");
-            label.className = "flex w-36 justify-between items-center text-sm text-slate-300 font-semibold";
-            label.innerHTML = `<span>${key}</span>`;
+            const label = document.createElement("label");
+            label.className = "w-36 text-sm text-slate-300 font-semibold cursor-pointer";
+            label.textContent = key;
+            label.htmlFor = `slider-${key}`;
 
-            // Bar container
-            const barContainer = document.createElement("div");
-            barContainer.className = "relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer";
-            barContainer.style.userSelect = "none";
+            // Slider container
+            const sliderWrapper = document.createElement("div");
+            sliderWrapper.className = "relative w-full h-4 flex items-center";
+
+            // Native input (hidden visually but accessible)
+            const input = document.createElement("input");
+            input.type = "range";
+            input.id = `slider-${key}`;
+            input.min = "0";
+            input.max = "100";
+            input.value = value;
+            input.className = "sr-only peer";
+            input.setAttribute("aria-label", key);
+
+            // Visual track
+            const track = document.createElement("div");
+            track.className = "relative w-full h-4 rounded-full bg-zinc-700 overflow-hidden cursor-pointer peer-focus:ring-2 peer-focus:ring-emerald-500 peer-focus:outline-none";
 
             // Fill bar
             const fillBar = document.createElement("div");
             fillBar.className = "absolute left-0 top-0 h-full bg-emerald-500 transition-all duration-100";
             fillBar.style.width = `${value}%`;
-            fillBar.dataset.fillFor = key;
 
-            barContainer.appendChild(fillBar);
+            track.appendChild(fillBar);
+            sliderWrapper.appendChild(input);
+            sliderWrapper.appendChild(track);
 
             // Output value
             const valueLabel = document.createElement("span");
             valueLabel.id = `${key}-value`;
-            valueLabel.className = "text-zinc-400 w-4";
+            valueLabel.className = "text-zinc-400 w-8 text-right font-mono text-sm";
             valueLabel.textContent = value;
 
-            // Drag interaction
-            let isDragging = false;
-
-            const updateValue = (e) => {
-                const rect = barContainer.getBoundingClientRect();
-                const percent = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-                const newVal = Math.round(percent * 100);
-                fillBar.style.width = `${newVal}%`;
-                valueLabel.textContent = newVal;
-                fillBar.setAttribute("data-value", newVal);
+            // Interaction logic
+            const updateUI = (val) => {
+                fillBar.style.width = `${val}%`;
+                valueLabel.textContent = val;
             };
 
-            barContainer.addEventListener("mousedown", (e) => {
+            // Input change updates UI
+            input.addEventListener("input", () => updateUI(input.value));
+
+            // Mouse interaction on track updates input
+            let isDragging = false;
+            const updateFromMouse = (e) => {
+                const rect = track.getBoundingClientRect();
+                const percent = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+                const val = Math.round(percent * 100);
+                input.value = val;
+                updateUI(val);
+            };
+
+            track.addEventListener("mousedown", (e) => {
                 isDragging = true;
-                updateValue(e);
+                updateFromMouse(e);
             });
 
             document.addEventListener("mousemove", (e) => {
-                if (isDragging) updateValue(e);
+                if (isDragging) updateFromMouse(e);
             });
 
             document.addEventListener("mouseup", () => {
@@ -452,7 +475,7 @@ const PersonaForm = (() => {
             });
 
             wrapper.appendChild(label);
-            wrapper.appendChild(barContainer);
+            wrapper.appendChild(sliderWrapper);
             wrapper.appendChild(valueLabel);
 
             container.appendChild(wrapper);
@@ -527,9 +550,9 @@ const PersonaForm = (() => {
             const {status: wasActive} = await res.json();
 
             const personality = {};
-            document.querySelectorAll("#personality-sliders div[data-fill-for]").forEach((bar) => {
-                const trait = bar.dataset.fillFor;
-                personality[trait] = parseInt(bar.style.width);
+            document.querySelectorAll("#personality-sliders input[type='range']").forEach((input) => {
+                const trait = input.id.replace('slider-', '');
+                personality[trait] = parseInt(input.value);
             });
 
             const backstory = {};
