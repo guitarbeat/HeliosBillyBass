@@ -11,3 +11,7 @@
 ## 2025-10-27 - [Accessible Collapsible Sections]
 **Learning:** Collapsible sections used non-semantic `<h3>` elements as click targets, making them inaccessible to keyboard users and screen readers.
 **Action:** Refactored `section_card` macro to use a semantic `<button>` inside the header with `aria-expanded` and `aria-controls` attributes. Updated JavaScript to toggle ARIA states and handle the new structure while maintaining backward compatibility.
+
+## 2025-11-20 - [Dynamic UI Accessibility]
+**Learning:** UI components generated dynamically via JavaScript (e.g., personality sliders, service buttons) often lacked the semantic structure (like `<input type="range">` or `aria-label`) present in their static HTML counterparts, leading to hidden accessibility failures.
+**Action:** When porting or generating UI in JS, rigorously replicate the accessible HTML structure used in static templates, especially for custom controls like sliders.
