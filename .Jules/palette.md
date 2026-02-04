@@ -15,3 +15,6 @@
 ## 2025-10-28 - [Dynamic Icon Button Accessibility]
 **Learning:** Buttons generated dynamically via JavaScript (e.g., service controls, wake-up list) often lack accessible names when they rely on `title` or hidden text spans. Material Icons' ligature text (e.g., "play_arrow") can be read aloud by screen readers if not hidden.
 **Action:** When creating buttons in JS, explicitly set `aria-label` matching the visual tooltip/label. Always add `aria-hidden="true"` to the icon element to prevent confusing announcements.
+## 2025-11-20 - [Dynamic UI Accessibility]
+**Learning:** UI components generated dynamically via JavaScript (e.g., personality sliders, service buttons) often lacked the semantic structure (like `<input type="range">` or `aria-label`) present in their static HTML counterparts, leading to hidden accessibility failures.
+**Action:** When porting or generating UI in JS, rigorously replicate the accessible HTML structure used in static templates, especially for custom controls like sliders.
