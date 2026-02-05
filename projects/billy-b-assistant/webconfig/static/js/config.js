@@ -508,7 +508,9 @@ const PersonaForm = (() => {
 
         // Allow dragging
         bar.addEventListener("mousedown", (e) => {
+            e.preventDefault(); // Prevent focus loss on click
             isDragging = true;
+            input.focus();
             updateFromMouse(e);
         });
 
