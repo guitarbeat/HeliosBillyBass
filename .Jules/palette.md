@@ -18,3 +18,7 @@
 ## 2025-11-20 - [Dynamic UI Accessibility]
 **Learning:** UI components generated dynamically via JavaScript (e.g., personality sliders, service buttons) often lacked the semantic structure (like `<input type="range">` or `aria-label`) present in their static HTML counterparts, leading to hidden accessibility failures.
 **Action:** When porting or generating UI in JS, rigorously replicate the accessible HTML structure used in static templates, especially for custom controls like sliders.
+
+## 2025-02-18 - [Custom Input Interaction]
+**Learning:** Custom visual inputs (like sliders built with divs) that overlay native `sr-only` inputs must explicitly transfer focus to the native input on click. Without this, mouse users who click to set a value cannot immediately use keyboard controls (like arrow keys) for fine adjustments, breaking the expected interaction model.
+**Action:** Always add `input.focus()` to the `mousedown` or `click` handler of custom visual controls that proxy to a hidden native input.
