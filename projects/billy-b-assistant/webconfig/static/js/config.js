@@ -859,6 +859,7 @@ function toggleTooltip(el) {
     if (tooltip) {
         const visible = tooltip.getAttribute("data-visible") === "true";
         tooltip.setAttribute("data-visible", visible ? "false" : "true");
+        el.setAttribute("aria-expanded", !visible);
     }
 }
 

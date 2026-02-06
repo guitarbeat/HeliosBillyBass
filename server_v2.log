@@ -1,0 +1,20 @@
+[fetch_latest_tag] Exception: Expecting value: line 1 column 1 (char 0)
+[save_versions] Refusing to save empty version
+🚀 Starting Mock Server on port 5000...
+ * Serving Flask app 'server'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /static/css/styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /static/js/config.js HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /hostname HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "[35m[1mGET /volume HTTP/1.1[0m" 500 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /version HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /logs HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /service/status HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "[35m[1mGET /mic-gain HTTP/1.1[0m" 500 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /device-info HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /persona HTTP/1.1" 200 -
+127.0.0.1 - - [06/Feb/2026 03:29:49] "GET /wakeup HTTP/1.1" 200 -
