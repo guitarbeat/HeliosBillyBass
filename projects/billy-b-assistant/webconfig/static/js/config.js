@@ -464,6 +464,8 @@ const PersonaForm = (() => {
             };
 
             track.addEventListener("mousedown", (e) => {
+                e.preventDefault();
+                input.focus();
                 isDragging = true;
                 updateFromMouse(e);
             });
@@ -508,6 +510,8 @@ const PersonaForm = (() => {
 
         // Allow dragging
         bar.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            input.focus();
             isDragging = true;
             updateFromMouse(e);
         });
