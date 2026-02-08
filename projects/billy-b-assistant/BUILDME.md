@@ -124,7 +124,7 @@ Afterwards I added the mic holder for easier assembly.
 
 ## C. Assemble
 
-> Before connecting the motors and powering up the Raspberry Pi it is recommended to have completed at least step **C. GPIO Voltage Configuration (Motor Safety)** of the [README.md](./../README.md)
+> Before connecting the motors and powering up the Raspberry Pi it is recommended to have completed at least step **C. GPIO Voltage Configuration (Motor Safety)** of the [README.md](./README.md)
 
 Once all the components are placed into the backplate (and everything is connected) the backplate can be mounted onto the original housing.
 Route the USB-C cable through the existing hole on the top and first attach only 2 of the 6 screws.
