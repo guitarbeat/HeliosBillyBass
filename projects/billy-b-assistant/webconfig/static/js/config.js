@@ -851,6 +851,9 @@ function toggleDropdown(btn) {
 
 function toggleTooltip(el) {
     el.classList.toggle("text-cyan-400")
+    const isExpanded = el.getAttribute("aria-expanded") === "true";
+    el.setAttribute("aria-expanded", !isExpanded);
+
     // Support both legacy (nested in label) and new accessible (sibling of label) structures
     const container = el.closest("label")?.parentElement || el.parentElement?.parentElement;
     if (!container) return;
@@ -859,6 +862,7 @@ function toggleTooltip(el) {
     if (tooltip) {
         const visible = tooltip.getAttribute("data-visible") === "true";
         tooltip.setAttribute("data-visible", visible ? "false" : "true");
+        tooltip.setAttribute("aria-hidden", visible ? "true" : "false");
     }
 }
 
