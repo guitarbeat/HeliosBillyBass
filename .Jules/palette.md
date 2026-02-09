@@ -18,3 +18,6 @@
 ## 2025-11-20 - [Dynamic UI Accessibility]
 **Learning:** UI components generated dynamically via JavaScript (e.g., personality sliders, service buttons) often lacked the semantic structure (like `<input type="range">` or `aria-label`) present in their static HTML counterparts, leading to hidden accessibility failures.
 **Action:** When porting or generating UI in JS, rigorously replicate the accessible HTML structure used in static templates, especially for custom controls like sliders.
+## 2025-02-18 - Tooltip Accessibility Pattern
+**Learning:** Tooltips that appear on click/hover need to be programmatically associated with their trigger via `aria-controls` and manage `aria-expanded` state.
+**Action:** When creating toggleable help text or tooltips, always use `role="tooltip"`, `aria-controls="{id}"`, and toggle `aria-expanded` on the trigger button.
