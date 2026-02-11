@@ -93,12 +93,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Import the app
-try:
-    from server import app
-except ImportError:
-    # If running from repo root
-    sys.path.append(os.path.join(os.getcwd(), 'projects/billy-b-assistant/webconfig'))
-    from projects.billy_b_assistant.webconfig.server import app
+from server import app
 
 if __name__ == "__main__":
     print("🚀 Starting Mock Server on port 5000...")
