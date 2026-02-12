@@ -22,3 +22,7 @@
 ## 2025-11-21 - [Tooltip ARIA Connection]
 **Learning:** Help buttons toggled tooltips purely visually (via CSS classes) without communicating the state or relationship to assistive technology, leaving screen reader users unaware of the revealed content.
 **Action:** Implemented `aria-expanded` on the toggle button and `aria-controls` pointing to the tooltip's ID, ensuring the interaction and content location are programmatically explicit.
+
+## 2025-02-18 - [Custom Input Interaction]
+**Learning:** Custom visual inputs (like sliders built with divs) that overlay native `sr-only` inputs must explicitly transfer focus to the native input on click. Without this, mouse users who click to set a value cannot immediately use keyboard controls (like arrow keys) for fine adjustments, breaking the expected interaction model.
+**Action:** Always add `input.focus()` to the `mousedown` or `click` handler of custom visual controls that proxy to a hidden native input.
