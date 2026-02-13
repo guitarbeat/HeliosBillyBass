@@ -545,13 +545,13 @@
                             </button>
                         </div>
                         <!-- Dropdown -->
-                        <div class="dropdown-menu absolute bottom-0 right-0 w-full text-zinc-800 border border-emerald-500  backdrop-blur-xs  rounded  z-20 hidden">
-                            <button onclick="exportSettings()"
+                        <div class="dropdown-menu absolute bottom-0 right-0 w-full text-zinc-800 border border-emerald-500  backdrop-blur-xs  rounded  z-20 hidden" role="menu">
+                            <button onclick="exportSettings()" role="menuitem"
                                     class="w-full flex gap-2 items-center px-4 py-2 bg-emerald-500 hover:bg-emerald-400 cursor-pointer">
                                 <span class="material-icons">file_download</span>
                                 Export Settings
                             </button>
-                            <label class="w-full flex gap-2 items-center px-4 py-2 bg-emerald-500/80relative bg-emerald-500 hover:bg-emerald-400 cursor-pointer">
+                            <label class="file-upload-label w-full flex gap-2 items-center px-4 py-2 bg-emerald-500/80 relative hover:bg-emerald-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white" tabindex="0" role="menuitem">
                                 <span class="material-icons">file_upload</span>
                                 <span>Import Settings</span>
                                 <input type="file" accept=".env" onchange="importSettings(this)" class="hidden"/>
@@ -639,13 +639,14 @@
                         <!-- Dropdown -->
                         <div
                                 class="dropdown-menu absolute bottom-0  right-0 w-full text-zinc-800 border border-emerald-500 rounded z-20 hidden"
+                                role="menu"
                         >
-                            <button onclick="exportPersona()"
+                            <button onclick="exportPersona()" role="menuitem"
                                     class="w-full flex gap-2 items-center px-4 py-2 bg-emerald-500 hover:bg-emerald-400 cursor-pointer">
                                 <span class="material-icons">file_download</span>
                                 Export Persona
                             </button>
-                            <label class="w-full flex gap-2 items-center px-4 py-2 bg-emerald-500 hover:bg-emerald-400 cursor-pointer">
+                            <label class="file-upload-label w-full flex gap-2 items-center px-4 py-2 bg-emerald-500 hover:bg-emerald-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white" tabindex="0" role="menuitem">
                                 <span class="material-icons">file_upload</span>
                                 <span>Import Persona</span>
                                 <input type="file" accept=".ini" onchange="importPersona(this)" class="hidden"/>

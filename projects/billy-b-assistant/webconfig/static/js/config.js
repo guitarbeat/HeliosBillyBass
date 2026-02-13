@@ -369,6 +369,7 @@ const PersonaForm = (() => {
     const updateBackstoryEmptyState = () => {
         const container = document.getElementById("backstory-fields");
         const hasFields = container.querySelectorAll(".flex.items-center").length > 0;
+        const hasFields = container.querySelectorAll("[data-backstory-field]").length > 0;
         let msg = container.querySelector(".backstory-empty-msg");
 
         if (!hasFields) {
@@ -386,6 +387,7 @@ const PersonaForm = (() => {
     const addBackstoryField = (key = "", value = "") => {
         const wrapper = document.createElement("div");
         wrapper.className = "flex items-center space-x-2";
+        wrapper.setAttribute("data-backstory-field", "");
 
         const keyInput = Object.assign(document.createElement("input"), {
             type: "text",
@@ -404,8 +406,10 @@ const PersonaForm = (() => {
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
         removeBtn.className = "text-rose-500 hover:text-rose-400 cursor-pointer";
+        removeBtn.setAttribute("aria-label", "Remove backstory item");
         const icon = document.createElement("span");
         icon.className = "material-icons align-middle";
+        icon.setAttribute("aria-hidden", "true");
         icon.textContent = "remove_circle_outline";
         removeBtn.appendChild(icon);
         removeBtn.onclick = () => {
@@ -529,7 +533,9 @@ const PersonaForm = (() => {
 
         // Allow dragging
         bar.addEventListener("mousedown", (e) => {
+            e.preventDefault(); // Prevent focus loss on click
             isDragging = true;
+            input.focus();
             updateFromMouse(e);
         });
 
@@ -580,7 +586,7 @@ const PersonaForm = (() => {
             });
 
             const backstory = {};
-            document.querySelectorAll("#backstory-fields > div").forEach((row) => {
+            document.querySelectorAll("#backstory-fields [data-backstory-field]").forEach((row) => {
                 const [keyInput, valInput] = row.querySelectorAll("input");
                 if (keyInput.value.trim() !== "") {
                     backstory[keyInput.value.trim()] = valInput.value.trim();
@@ -857,6 +863,8 @@ function toggleDropdown(btn) {
             menu.classList.add('hidden');
             const arrow = menu.parentElement.querySelector('.dropdown-toggle .material-icons');
             if (arrow) arrow.classList.remove('rotate-180');
+            const toggleBtn = menu.parentElement.querySelector('.dropdown-toggle');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
         }
     });
 
@@ -864,7 +872,8 @@ function toggleDropdown(btn) {
     let dropdown = btn.closest('.relative').querySelector('.dropdown-menu');
     if (!dropdown) return;
 
-    dropdown.classList.toggle('hidden');
+    const isHidden = dropdown.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', !isHidden);
 
     // Toggle arrow rotation
     const arrow = btn.querySelector('.material-icons');
@@ -905,8 +914,19 @@ document.addEventListener('click', (e) => {
             menu.classList.add('hidden');
             const arrow = menu.parentElement.querySelector('.dropdown-toggle .material-icons');
             if (arrow) arrow.classList.remove('rotate-180');
+            const toggleBtn = menu.parentElement.querySelector('.dropdown-toggle');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
         }
     });
+});
+
+// Handle keyboard activation for file upload labels
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('file-upload-label')) {
+        e.preventDefault();
+        const input = e.target.querySelector('input[type="file"]');
+        if (input) input.click();
+    }
 });
 
 // ===================== VERSION & UPDATE =====================
