@@ -368,7 +368,7 @@ const SettingsForm = (() => {
 const PersonaForm = (() => {
     const updateBackstoryEmptyState = () => {
         const container = document.getElementById("backstory-fields");
-        const hasFields = container.querySelectorAll(".flex.items-center").length > 0;
+        const hasFields = container.querySelectorAll("[data-backstory-field]").length > 0;
         let msg = container.querySelector(".backstory-empty-msg");
 
         if (!hasFields) {
@@ -385,6 +385,7 @@ const PersonaForm = (() => {
     const addBackstoryField = (key = "", value = "") => {
         const wrapper = document.createElement("div");
         wrapper.className = "flex items-center space-x-2";
+        wrapper.setAttribute("data-backstory-field", "");
 
         const keyInput = Object.assign(document.createElement("input"), {
             type: "text",
