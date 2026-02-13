@@ -404,8 +404,10 @@ const PersonaForm = (() => {
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
         removeBtn.className = "text-rose-500 hover:text-rose-400 cursor-pointer";
+        removeBtn.setAttribute("aria-label", "Remove backstory item");
         const icon = document.createElement("span");
         icon.className = "material-icons align-middle";
+        icon.setAttribute("aria-hidden", "true");
         icon.textContent = "remove_circle_outline";
         removeBtn.appendChild(icon);
         removeBtn.onclick = () => {
