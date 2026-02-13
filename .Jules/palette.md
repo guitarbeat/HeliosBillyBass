@@ -22,3 +22,7 @@
 ## 2025-11-21 - [Tooltip ARIA Connection]
 **Learning:** Help buttons toggled tooltips purely visually (via CSS classes) without communicating the state or relationship to assistive technology, leaving screen reader users unaware of the revealed content.
 **Action:** Implemented `aria-expanded` on the toggle button and `aria-controls` pointing to the tooltip's ID, ensuring the interaction and content location are programmatically explicit.
+
+## 2024-05-18 - Accessible Dropdown Menus & File Inputs
+**Learning:** Custom dropdown menus implemented with `hidden` classes lack `aria-expanded` state management and `role="menu"` structure, confusing screen readers. Also, wrapping a `hidden` file input in a clickable label is not keyboard-accessible by default.
+**Action:** When refactoring custom dropdowns, always toggle `aria-expanded` on the trigger and add `role="menu"`/`role="menuitem"`. For file inputs inside labels, ensure the label is focusable (`tabindex="0"`) and add a `keydown` handler (Enter/Space) to trigger the input click programmatically.
