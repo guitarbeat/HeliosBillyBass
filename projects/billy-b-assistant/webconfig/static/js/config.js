@@ -582,7 +582,7 @@ const PersonaForm = (() => {
             });
 
             const backstory = {};
-            document.querySelectorAll("#backstory-fields > div").forEach((row) => {
+            document.querySelectorAll("#backstory-fields [data-backstory-field]").forEach((row) => {
                 const [keyInput, valInput] = row.querySelectorAll("input");
                 if (keyInput.value.trim() !== "") {
                     backstory[keyInput.value.trim()] = valInput.value.trim();
