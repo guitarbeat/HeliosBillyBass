@@ -26,3 +26,7 @@
 ## 2025-02-18 - [Custom Input Interaction]
 **Learning:** Custom visual inputs (like sliders built with divs) that overlay native `sr-only` inputs must explicitly transfer focus to the native input on click. Without this, mouse users who click to set a value cannot immediately use keyboard controls (like arrow keys) for fine adjustments, breaking the expected interaction model.
 **Action:** Always add `input.focus()` to the `mousedown` or `click` handler of custom visual controls that proxy to a hidden native input.
+
+## 2024-05-18 - Accessible Dropdown Menus & File Inputs
+**Learning:** Custom dropdown menus implemented with `hidden` classes lack `aria-expanded` state management and `role="menu"` structure, confusing screen readers. Also, wrapping a `hidden` file input in a clickable label is not keyboard-accessible by default.
+**Action:** When refactoring custom dropdowns, always toggle `aria-expanded` on the trigger and add `role="menu"`/`role="menuitem"`. For file inputs inside labels, ensure the label is focusable (`tabindex="0"`) and add a `keydown` handler (Enter/Space) to trigger the input click programmatically.
