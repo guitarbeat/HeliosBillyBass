@@ -366,9 +366,26 @@ const SettingsForm = (() => {
 // ===================== PERSONA FORM =====================
 
 const PersonaForm = (() => {
+    const updateBackstoryEmptyState = () => {
+        const container = document.getElementById("backstory-fields");
+        const hasFields = container.querySelectorAll("[data-backstory-field]").length > 0;
+        let msg = container.querySelector(".backstory-empty-msg");
+
+        if (!hasFields) {
+            if (!msg) {
+                msg = document.createElement("div");
+                msg.className = "backstory-empty-msg text-sm text-zinc-400 italic py-2";
+                msg.textContent = "No backstory items yet. Add keys like 'origin', 'hobby', or 'secret' to give Billy more personality.";
+                container.appendChild(msg);
+            }
+        } else {
+            if (msg) msg.remove();
+        }
+    };
     const addBackstoryField = (key = "", value = "") => {
         const wrapper = document.createElement("div");
         wrapper.className = "flex items-center space-x-2";
+        wrapper.setAttribute("data-backstory-field", "");
 
         const keyInput = Object.assign(document.createElement("input"), {
             type: "text",
@@ -387,14 +404,20 @@ const PersonaForm = (() => {
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
         removeBtn.className = "text-rose-500 hover:text-rose-400 cursor-pointer";
+        removeBtn.setAttribute("aria-label", "Remove backstory item");
         const icon = document.createElement("span");
         icon.className = "material-icons align-middle";
+        icon.setAttribute("aria-hidden", "true");
         icon.textContent = "remove_circle_outline";
         removeBtn.appendChild(icon);
-        removeBtn.onclick = () => wrapper.remove();
+        removeBtn.onclick = () => {
+            wrapper.remove();
+            updateBackstoryEmptyState();
+        };
 
         wrapper.append(keyInput, valInput, removeBtn);
         document.getElementById("backstory-fields").appendChild(wrapper);
+        updateBackstoryEmptyState();
     };
 
     const renderPersonalitySliders = (personality) => {
@@ -508,7 +531,9 @@ const PersonaForm = (() => {
 
         // Allow dragging
         bar.addEventListener("mousedown", (e) => {
+            e.preventDefault(); // Prevent focus loss on click
             isDragging = true;
+            input.focus();
             updateFromMouse(e);
         });
 
@@ -532,6 +557,7 @@ const PersonaForm = (() => {
         const container = document.getElementById("backstory-fields");
         container.innerHTML = "";
         Object.entries(backstory).forEach(([k, v]) => addBackstoryField(k, v));
+        updateBackstoryEmptyState();
     };
 
     const loadPersona = async () => {
@@ -558,7 +584,7 @@ const PersonaForm = (() => {
             });
 
             const backstory = {};
-            document.querySelectorAll("#backstory-fields > div").forEach((row) => {
+            document.querySelectorAll("#backstory-fields [data-backstory-field]").forEach((row) => {
                 const [keyInput, valInput] = row.querySelectorAll("input");
                 if (keyInput.value.trim() !== "") {
                     backstory[keyInput.value.trim()] = valInput.value.trim();
