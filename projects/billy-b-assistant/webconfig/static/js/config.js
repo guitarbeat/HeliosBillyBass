@@ -858,6 +858,8 @@ function toggleDropdown(btn) {
             menu.classList.add('hidden');
             const arrow = menu.parentElement.querySelector('.dropdown-toggle .material-icons');
             if (arrow) arrow.classList.remove('rotate-180');
+            const toggleBtn = menu.parentElement.querySelector('.dropdown-toggle');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
         }
     });
 
@@ -865,7 +867,8 @@ function toggleDropdown(btn) {
     let dropdown = btn.closest('.relative').querySelector('.dropdown-menu');
     if (!dropdown) return;
 
-    dropdown.classList.toggle('hidden');
+    const isHidden = dropdown.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', !isHidden);
 
     // Toggle arrow rotation
     const arrow = btn.querySelector('.material-icons');
@@ -906,8 +909,19 @@ document.addEventListener('click', (e) => {
             menu.classList.add('hidden');
             const arrow = menu.parentElement.querySelector('.dropdown-toggle .material-icons');
             if (arrow) arrow.classList.remove('rotate-180');
+            const toggleBtn = menu.parentElement.querySelector('.dropdown-toggle');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
         }
     });
+});
+
+// Handle keyboard activation for file upload labels
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('file-upload-label')) {
+        e.preventDefault();
+        const input = e.target.querySelector('input[type="file"]');
+        if (input) input.click();
+    }
 });
 
 // ===================== VERSION & UPDATE =====================
