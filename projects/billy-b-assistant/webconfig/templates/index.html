@@ -355,7 +355,7 @@
                             <div class="w-20 text-sm font-medium text-gray-200">
                                 Gain: <span id="mic-gain-value">8</span>
                             </div>
-                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="sr-only peer">
+                            <input type="range" id="mic-gain" min="0" max="16" step="1" value="8" class="sr-only peer" aria-label="Microphone Gain">
                             <div
                                     class="relative w-full rounded-full bg-zinc-700 overflow-hidden cursor-pointer h-4 peer-focus:ring-2 peer-focus:ring-emerald-500 peer-focus:outline-none"
                                     id="mic-gain-bar"
@@ -590,7 +590,7 @@
                     <div>
                         <textarea name="META" id="meta-text" rows="16"
                                   class="w-full p-3 mt-1 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                  spellcheck="false"></textarea>
+                                  spellcheck="false" aria-label="Additional Instructions"></textarea>
                     </div>
                 {% endcall %}
 
