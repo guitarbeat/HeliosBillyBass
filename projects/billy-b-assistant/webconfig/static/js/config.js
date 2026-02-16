@@ -8,6 +8,13 @@ const LogPanel = (() => {
     // Reboot Billy
     const rebootBilly = async () => {
         if (!confirm("Are you sure you want to reboot Billy? This will reboot the whole system.")) return;
+
+        const btn = elements.rebootBillyBtn;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-icons animate-spin">restart_alt</span>`;
+        btn.title = "Rebooting...";
+
         try {
             const res = await fetch('/reboot', {method: 'POST'});
             const data = await res.json();
@@ -19,10 +26,16 @@ const LogPanel = (() => {
             }
             else {
                 showNotification(data.error || "Reboot failed", "error");
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                btn.title = "Reboot Billy";
             }
         } catch (err) {
             console.error("Failed to reboot Billy:", err);
             showNotification("Failed to reboot Billy", "error");
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            btn.title = "Reboot Billy";
         }
     };
 
@@ -30,6 +43,13 @@ const LogPanel = (() => {
     const shutdownBilly = async () => {
         if (!confirm("Are you sure you want to shutdown Billy?\n\nThis will power off the Raspberry Pi but one or more of the motors may remain engaged.\n" +
             "To fully power down, make sure to also switch off or unplug the power supply after shutdown.")) return;
+
+        const btn = elements.shutdownBillyBtn;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-icons animate-spin">power_settings_new</span>`;
+        btn.title = "Shutting down...";
+
         try {
             const res = await fetch('/shutdown', {method: 'POST'});
             const data = await res.json();
@@ -41,10 +61,16 @@ const LogPanel = (() => {
             }
             else {
                 showNotification(data.error || "Shutdown failed", "error");
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                btn.title = "Shutdown Billy";
             }
         } catch (err) {
             console.error("Failed to shutdown Billy:", err);
             showNotification("Failed to shutdown Billy", "error");
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            btn.title = "Shutdown Billy";
         }
     };
 
@@ -126,6 +152,11 @@ const LogPanel = (() => {
     const saveEnv = async () => {
         if (!confirm("Are you sure you want to overwrite the .env file? This may affect how Billy runs.")) return;
 
+        const btn = elements.saveEnvBtn;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+
         try {
             const res = await fetch('/save-env', {
                 method: 'POST',
@@ -143,14 +174,24 @@ const LogPanel = (() => {
                             setTimeout(() => location.reload(), 3000);
                         } else {
                             showNotification(data.error || "Restart failed", "error");
+                            btn.disabled = false;
+                            btn.textContent = originalText;
                         }
                     })
-                    .catch(err => showNotification(err.message, "error"));
+                    .catch(err => {
+                        showNotification(err.message, "error");
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    });
             } else {
                 showNotification(data.error || "Unknown error", "error");
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         } catch (err) {
             showNotification(err.message, "error");
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     };
 
@@ -285,60 +326,75 @@ const SettingsForm = (() => {
         document.getElementById("config-form").addEventListener("submit", async function (e) {
             e.preventDefault();
 
-            const resStatus = await fetch("/service/status");
-            const {status: wasActive} = await resStatus.json();
+            const btn = document.getElementById("save-btn");
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-icons animate-spin">sync</span> Saving...`;
 
-            const formData = new FormData(this);
-            const payload = Object.fromEntries(formData.entries());
+            try {
+                const resStatus = await fetch("/service/status");
+                const {status: wasActive} = await resStatus.json();
 
-            const flaskPortInput = document.getElementById("FLASK_PORT");
-            const oldPort = parseInt(flaskPortInput.getAttribute("data-original")) || 80;
-            const newPort = parseInt(payload["FLASK_PORT"] || "80");
+                const formData = new FormData(this);
+                const payload = Object.fromEntries(formData.entries());
 
-            const hostnameInput = document.getElementById("hostname");
-            const oldHostname = (hostnameInput.getAttribute("data-original") || hostnameInput.defaultValue || "").trim();
-            const newHostname = (formData.get("hostname") || "").trim();
+                const flaskPortInput = document.getElementById("FLASK_PORT");
+                const oldPort = parseInt(flaskPortInput.getAttribute("data-original")) || 80;
+                const newPort = parseInt(payload["FLASK_PORT"] || "80");
 
-            let hostnameChanged = false;
+                const hostnameInput = document.getElementById("hostname");
+                const oldHostname = (hostnameInput.getAttribute("data-original") || hostnameInput.defaultValue || "").trim();
+                const newHostname = (formData.get("hostname") || "").trim();
 
-            // Save config (.env)
-            const saveResponse = await fetch("/save", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(payload),
-            });
-            const saveResult = await saveResponse.json();
-            let portChanged = saveResult.port_changed || (oldPort !== newPort);
+                let hostnameChanged = false;
 
-            // Only update hostname if it actually changed
-            if (newHostname && newHostname !== oldHostname) {
-                const hostResponse = await fetch("/hostname", {
+                // Save config (.env)
+                const saveResponse = await fetch("/save", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({hostname: newHostname})
+                    body: JSON.stringify(payload),
                 });
-                const hostResult = await hostResponse.json();
-                if (hostResult.hostname) {
-                    hostnameChanged = true;
-                    showNotification(`Hostname updated to ${hostResult.hostname}.local`, "success", 5000);
+                const saveResult = await saveResponse.json();
+                let portChanged = saveResult.port_changed || (oldPort !== newPort);
+
+                // Only update hostname if it actually changed
+                if (newHostname && newHostname !== oldHostname) {
+                    const hostResponse = await fetch("/hostname", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({hostname: newHostname})
+                    });
+                    const hostResult = await hostResponse.json();
+                    if (hostResult.hostname) {
+                        hostnameChanged = true;
+                        showNotification(`Hostname updated to ${hostResult.hostname}.local`, "success", 5000);
+                    }
                 }
-            }
 
-            if (wasActive === "active") {
-                await fetch("/service/restart");
-                showNotification("Settings saved – Billy restarted", "success");
-            } else {
-                showNotification("Settings saved", "success");
-            }
+                if (wasActive === "active") {
+                    await fetch("/service/restart");
+                    showNotification("Settings saved – Billy restarted", "success");
+                } else {
+                    showNotification("Settings saved", "success");
+                }
 
-            if (portChanged || hostnameChanged) {
-                const targetHost = hostnameChanged ? `${newHostname}.local` : window.location.hostname;
-                const targetPort = portChanged ? newPort : (window.location.port || 80);
+                if (portChanged || hostnameChanged) {
+                    const targetHost = hostnameChanged ? `${newHostname}.local` : window.location.hostname;
+                    const targetPort = portChanged ? newPort : (window.location.port || 80);
 
-                showNotification(`Redirecting to http://${targetHost}:${targetPort}/...`, "warning", 5000);
-                setTimeout(() => {
-                    window.location.href = `http://${targetHost}:${targetPort}/`;
-                }, 3000);
+                    showNotification(`Redirecting to http://${targetHost}:${targetPort}/...`, "warning", 5000);
+                    setTimeout(() => {
+                        window.location.href = `http://${targetHost}:${targetPort}/`;
+                    }, 3000);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                }
+            } catch (err) {
+                console.error("Save settings failed", err);
+                showNotification("Failed to save settings: " + err, "error");
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         });
     };
@@ -368,7 +424,6 @@ const SettingsForm = (() => {
 const PersonaForm = (() => {
     const updateBackstoryEmptyState = () => {
         const container = document.getElementById("backstory-fields");
-        const hasFields = container.querySelectorAll(".flex.items-center").length > 0;
         const hasFields = container.querySelectorAll("[data-backstory-field]").length > 0;
         let msg = container.querySelector(".backstory-empty-msg");
 
@@ -395,6 +450,7 @@ const PersonaForm = (() => {
             placeholder: "Key",
             className: "w-1/3 p-1 bg-zinc-800 text-white rounded"
         });
+        keyInput.setAttribute("aria-label", "Backstory Key");
 
         const valInput = Object.assign(document.createElement("input"), {
             type: "text",
@@ -402,6 +458,7 @@ const PersonaForm = (() => {
             placeholder: "Value",
             className: "flex-1 p-1 bg-zinc-800 text-white rounded"
         });
+        valInput.setAttribute("aria-label", "Backstory Value");
 
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
@@ -576,47 +633,61 @@ const PersonaForm = (() => {
         document.getElementById("persona-form").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const res = await fetch("/service/status");
-            const {status: wasActive} = await res.json();
+            const btn = document.getElementById("save-persona-btn");
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-icons animate-spin">sync</span> Saving...`;
 
-            const personality = {};
-            document.querySelectorAll("#personality-sliders input[type='range']").forEach((input) => {
-                const trait = input.id.replace('slider-', '');
-                personality[trait] = parseInt(input.value);
-            });
+            try {
+                const res = await fetch("/service/status");
+                const {status: wasActive} = await res.json();
 
-            const backstory = {};
-            document.querySelectorAll("#backstory-fields [data-backstory-field]").forEach((row) => {
-                const [keyInput, valInput] = row.querySelectorAll("input");
-                if (keyInput.value.trim() !== "") {
-                    backstory[keyInput.value.trim()] = valInput.value.trim();
+                const personality = {};
+                document.querySelectorAll("#personality-sliders input[type='range']").forEach((input) => {
+                    const trait = input.id.replace('slider-', '');
+                    personality[trait] = parseInt(input.value);
+                });
+
+                const backstory = {};
+                document.querySelectorAll("#backstory-fields [data-backstory-field]").forEach((row) => {
+                    const [keyInput, valInput] = row.querySelectorAll("input");
+                    if (keyInput.value.trim() !== "") {
+                        backstory[keyInput.value.trim()] = valInput.value.trim();
+                    }
+                });
+
+                const meta = document.getElementById("meta-text").value.trim();
+
+                const wakeup = {};
+                const rows = document.querySelectorAll("#wakeup-sound-list .flex[data-index]");
+                let currentIndex = 1;
+                rows.forEach((row) => {
+                    const phrase = row.querySelector("input[type='text']")?.value?.trim();
+                    if (phrase) {
+                        wakeup[currentIndex++] = phrase;
+                    }
+                });
+
+                await fetch("/persona", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({PERSONALITY: personality, BACKSTORY: backstory, META: meta, WAKEUP: wakeup })
+                });
+
+                showNotification("Persona saved", "success");
+
+                if (wasActive === "active") {
+                    await fetch("/service/restart");
+                    showNotification("Persona saved – service restarted", "success");
+                    ServiceStatus.fetchStatus();
                 }
-            });
-
-            const meta = document.getElementById("meta-text").value.trim();
-
-            const wakeup = {};
-            const rows = document.querySelectorAll("#wakeup-sound-list .flex[data-index]");
-            let currentIndex = 1;
-            rows.forEach((row) => {
-                const phrase = row.querySelector("input[type='text']")?.value?.trim();
-                if (phrase) {
-                    wakeup[currentIndex++] = phrase;
-                }
-            });
-
-            await fetch("/persona", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({PERSONALITY: personality, BACKSTORY: backstory, META: meta, WAKEUP: wakeup })
-            });
-
-            showNotification("Persona saved", "success");
-
-            if (wasActive === "active") {
-                await fetch("/service/restart");
-                showNotification("Persona saved – service restarted", "success");
-                ServiceStatus.fetchStatus();
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            } catch (err) {
+                console.error("Failed to save persona:", err);
+                showNotification("Failed to save persona", "error");
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         });
     };
@@ -668,6 +739,7 @@ function createWakeupRow(index, phrase = "", hasAudio = false) {
     input.type = "text";
     input.className = "text-input w-full rounded bg-zinc-800 border border-zinc-700 px-2 py-1";
     input.value = phrase;
+    input.setAttribute("aria-label", "Wake-up phrase");
     if (!phrase) input.placeholder = "word or phrase";
     row.appendChild(input);
 
@@ -1359,6 +1431,13 @@ function importSettings(input) {
         showNotification("Only .env files are allowed.", "error");
         return;
     }
+
+    const label = input.closest('label');
+    const span = label.querySelector('span:nth-of-type(2)');
+    const originalText = span.textContent;
+    span.textContent = "Importing...";
+    label.classList.add('opacity-50', 'pointer-events-none');
+
     const reader = new FileReader();
     reader.onload = function (e) {
         fetch('/save-env', {
@@ -1373,7 +1452,14 @@ function importSettings(input) {
                     setTimeout(() => location.reload(), 2000);
                 } else {
                     showNotification(data.error || "Failed to import settings.", "error");
+                    span.textContent = originalText;
+                    label.classList.remove('opacity-50', 'pointer-events-none');
                 }
+            })
+            .catch(err => {
+                showNotification("Import failed: " + err, "error");
+                span.textContent = originalText;
+                label.classList.remove('opacity-50', 'pointer-events-none');
             });
     };
     reader.readAsText(file);

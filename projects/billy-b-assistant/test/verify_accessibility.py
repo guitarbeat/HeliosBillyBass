@@ -8,9 +8,16 @@ def verify_accessibility():
         print("Navigating to app...")
         page.goto("http://localhost:5000")
 
+        # 1. Verify aria-labels on static elements
+        print("Verifying static aria-labels...")
+        mic_gain = page.locator("#mic-gain")
+        expect(mic_gain).to_have_attribute("aria-label", "Microphone Gain")
+
+        meta_text = page.locator("#meta-text")
+        expect(meta_text).to_have_attribute("aria-label", "Additional Instructions")
+
         # Select the Software Settings section header button
         # The title is "Software Settings"
-        # Since I changed the macro, the button should be findable by text inside the button
         section_button = page.get_by_role("button", name="Software Settings")
 
         print("Checking initial state...")
@@ -33,6 +40,20 @@ def verify_accessibility():
 
         print("Testing keyboard focus...")
         section_button.focus()
+
+        # 2. Verify dynamic elements
+        print("Adding wake-up sound...")
+        page.get_by_role("button", name="Add Wake-up Sound").click()
+        wakeup_input = page.locator("#wakeup-sound-list input[type='text']").last
+        expect(wakeup_input).to_have_attribute("aria-label", "Wake-up phrase")
+
+        print("Adding backstory field...")
+        page.get_by_role("button", name="Add Field").click()
+        backstory_container = page.locator("#backstory-fields")
+        key_input = backstory_container.locator("input[placeholder='Key']").last
+        val_input = backstory_container.locator("input[placeholder='Value']").last
+        expect(key_input).to_have_attribute("aria-label", "Backstory Key")
+        expect(val_input).to_have_attribute("aria-label", "Backstory Value")
 
         # Take screenshot of focused state
         page.screenshot(path="verification_accessibility.png")
