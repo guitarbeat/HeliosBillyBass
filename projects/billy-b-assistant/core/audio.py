@@ -4,19 +4,20 @@ This module consolidates audio device management and playback operations.
 """
 import asyncio
 import base64
+import contextlib
 import json
 import os
-import time
 import wave
+from typing import Dict, Any, List, Tuple
 
 import numpy as np
 from scipy.signal import resample
 
 from .audio_device_manager import device_manager
 from .audio_playback import playback_manager
-from .config import CHUNK_MS, MIC_TIMEOUT_SECONDS, SILENCE_THRESHOLD, TEXT_ONLY_MODE
-from .constants import DEFAULT_SAMPLE_RATE, DEFAULT_CHANNELS, SONGS_DIR
-from .movements import move_tail_async, stop_all_motors
+from .config import CHUNK_MS
+from .constants import SONGS_DIR, STATE_PLAYING_SONG, STATE_IDLE
+from .movements import stop_all_motors
 
 
 # Expose the main interfaces for backward compatibility
@@ -127,12 +128,51 @@ def reset_for_new_song():
     playback_manager.reset_for_new_song()
 
 
-async def play_song(song_name):
-    """Play a full Billy song: main audio, vocals for mouth, drums for tail."""
-    import contextlib
+def load_song_metadata(path: str) -> Dict[str, Any]:
+    """
+    Load song metadata from a file.
 
-    from core import audio
-    from core.movements import stop_all_motors
+    Args:
+        path: Path to the metadata.txt file.
+
+    Returns:
+        A dictionary containing the metadata.
+    """
+    metadata = {
+        "bpm": 120,
+        "head_moves": [],
+        "tail_threshold": 1500,
+        "gain": 1.0,
+        "compensate_tail": 0.0,
+        "half_tempo_tail_flap": False,
+    }
+    if not os.path.exists(path):
+        print(f"⚠️ No metadata.txt found at {path}")
+        return metadata
+
+    with open(path) as f:
+        for line in f:
+            if '=' in line:
+                key, value = line.strip().split('=', 1)
+                if key == "head_moves":
+                    metadata[key] = [
+                        (float(v.split(':')[0]), float(v.split(':')[1]))
+                        for v in value.split(',')
+                    ]
+                elif key in ("bpm", "tail_threshold", "gain", "compensate_tail"):
+                    metadata[key] = float(value.strip())
+                elif key == "half_tempo_tail_flap":
+                    metadata[key] = value.strip().lower() == "true"
+    return metadata
+
+
+async def play_song(song_name: str):
+    """
+    Play a full Billy song: main audio, vocals for mouth, drums for tail.
+
+    Args:
+        song_name: Name of the song directory in the songs folder.
+    """
     from core.mqtt import mqtt_publish
 
     reset_for_new_song()
@@ -143,52 +183,31 @@ async def play_song(song_name):
     DRUMS_AUDIO = os.path.join(SONG_DIR, "drums.wav")
     METADATA_FILE = os.path.join(SONG_DIR, "metadata.txt")
 
-    def load_metadata(path):
-        metadata = {
-            "bpm": None,
-            "head_moves": [],
-            "tail_threshold": 1500,
-            "gain": 1.0,
-            "compensate_tail": 0.0,
-            "half_tempo_tail_flap": False,
-        }
-        if not os.path.exists(path):
-            print(f"⚠️ No metadata.txt found at {path}")
-            return metadata
-
-        with open(path) as f:
-            for line in f:
-                if '=' in line:
-                    key, value = line.strip().split('=', 1)
-                    if key == "head_moves":
-                        metadata[key] = [
-                            (float(v.split(':')[0]), float(v.split(':')[1]))
-                            for v in value.split(',')
-                        ]
-                    elif key in ("bpm", "tail_threshold", "gain", "compensate_tail"):
-                        metadata[key] = float(value.strip())
-                    elif key == "half_tempo_tail_flap":
-                        metadata[key] = value.strip().lower() == "true"
-        return metadata
-
     # --- Load metadata ---
-    metadata = load_metadata(METADATA_FILE)
+    metadata = load_song_metadata(METADATA_FILE)
+
     GAIN = metadata.get("gain", 1.0)
     BPM = metadata.get("bpm", 120)
     tail_threshold = metadata.get("tail_threshold", 1500)
+
+    # Update global variable via module access or direct assignment if it's imported
+    # Note: compensate_tail_beats is a global in this module aliased from playback_manager
     global compensate_tail_beats
     compensate_tail_beats = metadata.get("compensate_tail", 0.0)
+
+    # Set global playback_manager attributes directly if possible, or use the aliases
+    playback_manager.compensate_tail_beats = compensate_tail_beats
+
     head_move_schedule = metadata.get("head_moves", [])
     for move in head_move_schedule:
-        audio.head_move_queue.put(move)
-    half_tempo_tail_flap = metadata.get("half_tempo_tail_flap", False)
+        head_move_queue.put(move)
 
-    audio.beat_length = 60.0 / BPM
+    playback_manager.beat_length = 60.0 / BPM
     if metadata.get("half_tempo_tail_flap"):
-        audio.beat_length *= 2
+        playback_manager.beat_length *= 2
 
     # Start the playback worker, passing the schedule
-    audio.song_mode = True
+    playback_manager.song_mode = True
     ensure_playback_worker_started(CHUNK_MS)
 
     mqtt_publish("billy/state", STATE_PLAYING_SONG)
@@ -251,7 +270,7 @@ async def play_song(song_name):
                 rms_drums = np.sqrt(np.mean(samples_drums.astype(np.float32) ** 2))
 
                 # --- Enqueue combined chunk
-                audio.playback_queue.put((
+                playback_queue.put((
                     "song",
                     samples_main.tobytes(),
                     samples_vocals.tobytes(),
@@ -259,13 +278,13 @@ async def play_song(song_name):
                 ))
 
         print("⌛ Waiting for song playback to complete...")
-        await asyncio.to_thread(audio.playback_queue.join())
+        await asyncio.to_thread(playback_queue.join)
 
     except Exception as e:
         print(f"❌ Playback failed: {e}")
 
     finally:
-        audio.song_mode = False
+        playback_manager.song_mode = False
         stop_all_motors()
         mqtt_publish("billy/state", STATE_IDLE)
         print("🎶 Song finished, waiting for button press.")
